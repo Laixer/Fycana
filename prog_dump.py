@@ -1,16 +1,19 @@
 import logging
 
 from pyglonax.excavator import ExcavatorAdapter
+from pyglonax.util import get_config
 
-logging.basicConfig(format='%(levelname)s %(message)s', level=logging.DEBUG)
+config = get_config()
+
+logging.basicConfig(format="%(levelname)s %(message)s", level=logging.DEBUG)
 
 
-class Diagnose:
+class Dump:
     """
     Diagnose the machine
     """
 
-    def __init__(self, host="localhost:50051"):
+    def __init__(self, host):
         self.machine = ExcavatorAdapter(host=host)
 
     def stop(self):
@@ -22,8 +25,7 @@ class Diagnose:
 
 
 if __name__ == "__main__":
-    # program = Diagnose("192.168.240.100:50051")
-    program = Diagnose()
+    program = Dump(host=config["GLONAX_HOST"])
     try:
         program.start()
     except KeyboardInterrupt:
