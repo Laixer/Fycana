@@ -1,7 +1,4 @@
 import os
-import sys
-import time
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -25,8 +22,6 @@ def from_local_path(file, sub_dir=None):
 
 
 excavator = Excavator.from_urdf(from_local_path("volvo_ec240cl.urdf", "urdf"))
-
-print(excavator)
 
 adapter = ExcavatorAdapter()
 adapter.start()
@@ -63,6 +58,14 @@ def animate(i):
     z.append(effector[2])
 
     ax.clear()
+
+    ax.text(
+        effector[0],
+        effector[1],
+        effector[2],
+        "({:.2f}, {:.2f}, {:.2f})".format(effector[0], effector[1], effector[2]),
+    ),
+
     ax.set_xlim(-10, 10)
     ax.set_ylim(-10, 10)
     ax.set_zlim(0, 10)
@@ -71,8 +74,9 @@ def animate(i):
     ax.set_ylabel("Y Axis")
     ax.set_zlabel("Z Axis")
     ax.plot(x, y, z, "ro-")
-    print("Plotting")
 
 
 ani = animation.FuncAnimation(fig, animate, interval=100)
 plt.show()
+
+adapter.stop()
