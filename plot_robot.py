@@ -1,31 +1,23 @@
-import os
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter
+from pyglonax.util import get_config
 
 matplotlib.use("TkAgg")
 
-fig = plt.figure(figsize=(10, 10))
-ax = fig.add_subplot(projection="3d")
+config = get_config()
 
+excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
 
-def from_local_path(file, sub_dir=None):
-    script_dir = os.path.dirname(__file__)
-    if sub_dir is None:
-        rel_path = file
-    else:
-        rel_path = os.path.join(sub_dir, file)
-    abs_file_path = os.path.join(script_dir, rel_path)
-    return abs_file_path
-
-
-excavator = Excavator.from_urdf(from_local_path("volvo_ec240cl.urdf", "urdf"))
-
-adapter = ExcavatorAdapter()
+adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
 adapter.start()
 adapter.wait_until_initialized()
+
+
+fig = plt.figure(figsize=(10, 10))
+ax = fig.add_subplot(projection="3d")
 
 
 def animate(i):

@@ -12,6 +12,7 @@ POWER_NEUTRAL = 0
 POWER_MIN = -32_000
 
 
+# TODO: Remove this
 class Motion:
     def __init__(self, channel):
         self._stub = vms_pb2_grpc.VehicleManagementStub(channel)
@@ -23,7 +24,9 @@ class Motion:
             logging.error("Error sending motion command: %s", e.details())
 
     def change(self, motion_list):
-        changes = map(lambda a: vms_pb2.Motion.ChangeSet(actuator=a[0], value=a[1]), motion_list)
+        changes = map(
+            lambda a: vms_pb2.Motion.ChangeSet(actuator=a[0], value=a[1]), motion_list
+        )
 
         self._commit(vms_pb2.Motion(type=vms_pb2.Motion.CHANGE, changes=changes))
 
@@ -43,8 +46,7 @@ class MotionProfile:
 
     def proportional_power(self, value):
         if abs(value) > self.lower_bound:
-            power = self.offset + \
-                min((abs(value) * self.scale), 32_767 - self.offset)
+            power = self.offset + min((abs(value) * self.scale), 32_767 - self.offset)
             if value < 0:
                 return -power
             else:

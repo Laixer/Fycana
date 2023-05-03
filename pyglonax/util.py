@@ -1,10 +1,28 @@
+import os
 import numpy as np
+from dotenv import load_dotenv, dotenv_values
+
+
+def get_config() -> dict:
+    load_dotenv()
+    return dotenv_values(".env")
+
 
 def numpy3d_to_string(array):
     """Convert a numpy array to a string"""
     if array is None:
         return "None"
     return f"[{array[0]:.2f}, {array[1]:.2f}, {array[2]:.2f}]"
+
+
+def from_local_path(file, sub_dir=None):
+    script_dir = os.path.dirname(__file__)
+    if sub_dir is None:
+        rel_path = file
+    else:
+        rel_path = os.path.join(sub_dir, file)
+    abs_file_path = os.path.join(script_dir, rel_path)
+    return abs_file_path
 
 
 class MockEncoder:
@@ -34,7 +52,9 @@ class MockEncoder:
     @classmethod
     def random(cls, id, resolution, lower_bound, upper_bound):
         """Get a random value between the bounds"""
-        initial_value = np.round(np.random.uniform(lower_bound, upper_bound) * resolution, 0)
+        initial_value = np.round(
+            np.random.uniform(lower_bound, upper_bound) * resolution, 0
+        )
 
         encoder = cls(id, resolution, lower_bound, upper_bound, initial_value)
         return encoder

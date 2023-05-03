@@ -4,28 +4,20 @@ import time
 import numpy as np
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter
+from pyglonax.util import get_config
+
+config = get_config()
 
 np.set_printoptions(formatter={"float": lambda x: "{0:0.2f}".format(x)})
 
-
-def from_local_path(file, sub_dir=None):
-    script_dir = os.path.dirname(__file__)
-    if sub_dir is None:
-        rel_path = file
-    else:
-        rel_path = os.path.join(sub_dir, file)
-    abs_file_path = os.path.join(script_dir, rel_path)
-    return abs_file_path
-
-
-program = np.load(from_local_path("default_trainnig_v1.npy", "model"))
-excavator = Excavator.from_urdf(from_local_path("volvo_ec240cl.urdf", "urdf"))
+program = np.load(file="model/default_trainnig_v1.npy")
+excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
 
 print(excavator)
 
 # sys.exit(0)
 
-adapter = ExcavatorAdapter()
+adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
 # adapter.stop()
 # adapter.idle()
 

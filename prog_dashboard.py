@@ -3,6 +3,7 @@ import time
 import math
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter
+from pyglonax.util import get_config
 
 from rich.table import Table
 from rich.live import Live
@@ -12,19 +13,11 @@ from rich.console import Group
 from rich.align import Align
 from rich.text import Text
 
-
-def from_local_path(file, sub_dir=None):
-    script_dir = os.path.dirname(__file__)
-    if sub_dir is None:
-        rel_path = file
-    else:
-        rel_path = os.path.join(sub_dir, file)
-    abs_file_path = os.path.join(script_dir, rel_path)
-    return abs_file_path
+config = get_config()
 
 
-excavator = Excavator.from_urdf(from_local_path("volvo_ec240cl.urdf", "urdf"))
-adapter = ExcavatorAdapter()
+excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
+adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
 
 
 def format_angle(value=None) -> Text:
