@@ -11,6 +11,8 @@ class Adapter:
     Adapter to remote machine
     """
 
+    last_signal = 0
+
     def signal_event(self, signal):
         """
         Signal event handler.
@@ -28,6 +30,7 @@ class Adapter:
                 if self._event.is_set():
                     break
 
+                self.last_signal = time.time()
                 self.signal_event(signal)
         except grpc.RpcError as e:
             match e.code():
@@ -53,6 +56,11 @@ class Adapter:
 
         self._event = threading.Event()
         self._signal_thread = threading.Thread(target=self._on_signal, args=())
+
+    @property
+    def signal_elapsed_time(self) -> float:
+        """Returns the elapsed time in seconds since the last signal"""
+        return time.time() - self.last_signal
 
     def _commit(self, motion_request):
         try:

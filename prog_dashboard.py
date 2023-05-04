@@ -34,6 +34,7 @@ def format_angle(value=None) -> Text:
 
     return text
 
+
 def format_angle_low(value=None) -> Text:
     text = Text()
 
@@ -114,6 +115,22 @@ class Header:
         return Panel(grid, style="on grey11")
 
 
+class Footer:
+    """Display header connection status and host."""
+
+    def __rich__(self) -> Panel:
+        grid = Table.grid(expand=True)
+        grid.add_column(justify="left")
+        grid.add_column(justify="center", ratio=1)
+        grid.add_column(justify="right")
+
+        grid.add_row(
+            "Laixer Equipment B.V.", "", "{:.3f}s".format(adapter.signal_elapsed_time)
+        )
+
+        return Panel(grid, style="grey62 on grey3")
+
+
 class EnginePanel:
     """Display engine parameters."""
 
@@ -165,7 +182,7 @@ class EncoderTable:
         table.add_column("Encoder", no_wrap=True, min_width=10)
         table.add_column("Position", justify="right", style="grey66")
         table.add_column("Bounds Lower", justify="right")
-        table.add_column("Angle", justify="right")
+        table.add_column("Relative Angle", justify="right")
         table.add_column("Percentage", justify="right")
         table.add_column("Bounds Upper", justify="right")
 
@@ -223,13 +240,13 @@ class EncoderTable:
             table.add_row(
                 "Attachment",
                 "{:3.3f}".format(adapter.encoder["attachment"]["position"]),
-                format_angle_low(),
+                format_angle_low(attachment_joint.lower_bound),
                 format_angle(adapter.encoder["attachment"]["angle"]),
                 format_percent(
                     attachment_joint.normalize(adapter.encoder["attachment"]["angle"])
                     * 100
                 ),
-                format_angle_low(),
+                format_angle_low(attachment_joint.upper_bound),
             )
         else:
             table.add_row("Attachment")
@@ -346,7 +363,7 @@ layout["encoder"].update(
 )
 layout["engine"].update(EnginePanel())
 layout["vms"].update(VMSPanel())
-layout["footer"].update(Panel("Laixer Equipment B.V.", style="grey62 on grey3"))
+layout["footer"].update(Footer())
 layout["trans"].update(
     Panel(
         KinematicGrid(), title="[bright_cyan][ Origin Translation ]", style="on grey11"
