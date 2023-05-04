@@ -34,22 +34,36 @@ def animate(i):
     y.append(effector[1])
     z.append(effector[2])
 
-    effector = excavator.forward_kinematics(joint_name="boom_joint")
-    x.append(effector[0])
-    y.append(effector[1])
-    z.append(effector[2])
+    boom_point = excavator.forward_kinematics(joint_name="boom_joint")
+    x.append(boom_point[0])
+    y.append(boom_point[1])
+    z.append(boom_point[2])
 
-    effector = excavator.forward_kinematics(joint_name="arm_joint")
-    x.append(effector[0])
-    y.append(effector[1])
-    z.append(effector[2])
+    ax.clear()
+
+    ax.text(
+        boom_point[0],
+        boom_point[1],
+        boom_point[2],
+        "({:.2f}, {:.2f}, {:.2f})".format(boom_point[0], boom_point[1], boom_point[2]),
+    ),
+
+    arm_point = excavator.forward_kinematics(joint_name="arm_joint")
+    x.append(arm_point[0])
+    y.append(arm_point[1])
+    z.append(arm_point[2])
+
+    ax.text(
+        arm_point[0],
+        arm_point[1],
+        arm_point[2],
+        "({:.2f}, {:.2f}, {:.2f})".format(arm_point[0], arm_point[1], arm_point[2]),
+    ),
 
     effector = excavator.forward_kinematics()
     x.append(effector[0])
     y.append(effector[1])
     z.append(effector[2])
-
-    ax.clear()
 
     ax.text(
         effector[0],
