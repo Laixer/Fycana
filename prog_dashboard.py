@@ -15,7 +15,6 @@ from rich.text import Text
 
 config = get_config()
 
-
 excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
 adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
 
@@ -31,6 +30,21 @@ def format_angle(value=None) -> Text:
     text.append("rad", style="bright_black")
     text.append(" ")
     text.append("{:7.2f}".format(math.degrees(value)), style="yellow1")
+    text.append("°", style="bright_black")
+
+    return text
+
+def format_angle_low(value=None) -> Text:
+    text = Text()
+
+    if value is None:
+        text.append("inf", style="bright_black")
+        return text
+
+    text.append("{:7.2f}".format(value), style="chartreuse4")
+    text.append("rad", style="bright_black")
+    text.append(" ")
+    text.append("{:7.2f}".format(math.degrees(value)), style="yellow3")
     text.append("°", style="bright_black")
 
     return text
@@ -149,7 +163,7 @@ class EncoderTable:
         table = Table(show_edge=False, expand=True)
 
         table.add_column("Encoder", no_wrap=True, min_width=10)
-        table.add_column("Position", justify="right", style="bright_black")
+        table.add_column("Position", justify="right", style="grey66")
         table.add_column("Bounds Lower", justify="right")
         table.add_column("Angle", justify="right")
         table.add_column("Percentage", justify="right")
@@ -160,13 +174,13 @@ class EncoderTable:
 
             table.add_row(
                 "Frame",
-                "{:6.1f}".format(adapter.encoder["frame"]["position"]),
-                format_angle(frame_joint.lower_bound),
+                "{:3.3f}".format(adapter.encoder["frame"]["position"]),
+                format_angle_low(frame_joint.lower_bound),
                 format_angle(adapter.encoder["frame"]["angle"]),
                 format_percent(
                     frame_joint.normalize(adapter.encoder["frame"]["angle"]) * 100
                 ),
-                format_angle(frame_joint.upper_bound),
+                format_angle_low(frame_joint.upper_bound),
             )
         else:
             table.add_row("Frame")
@@ -176,13 +190,13 @@ class EncoderTable:
 
             table.add_row(
                 "Boom",
-                "{:6.1f}".format(adapter.encoder["boom"]["position"]),
-                format_angle(boom_joint.lower_bound),
+                "{:3.3f}".format(adapter.encoder["boom"]["position"]),
+                format_angle_low(boom_joint.lower_bound),
                 format_angle(adapter.encoder["boom"]["angle"]),
                 format_percent(
                     boom_joint.normalize(adapter.encoder["boom"]["angle"]) * 100
                 ),
-                format_angle(boom_joint.upper_bound),
+                format_angle_low(boom_joint.upper_bound),
             )
         else:
             table.add_row("Boom")
@@ -192,13 +206,13 @@ class EncoderTable:
 
             table.add_row(
                 "Arm",
-                "{:6.1f}".format(adapter.encoder["arm"]["position"]),
-                format_angle(arm_joint.lower_bound),
+                "{:3.3f}".format(adapter.encoder["arm"]["position"]),
+                format_angle_low(arm_joint.lower_bound),
                 format_angle(adapter.encoder["arm"]["angle"]),
                 format_percent(
                     arm_joint.normalize(adapter.encoder["arm"]["angle"]) * 100
                 ),
-                format_angle(arm_joint.upper_bound),
+                format_angle_low(arm_joint.upper_bound),
             )
         else:
             table.add_row("Arm")
@@ -208,14 +222,14 @@ class EncoderTable:
 
             table.add_row(
                 "Attachment",
-                "{:6.1f}".format(adapter.encoder["attachment"]["position"]),
-                format_angle(),
+                "{:3.3f}".format(adapter.encoder["attachment"]["position"]),
+                format_angle_low(),
                 format_angle(adapter.encoder["attachment"]["angle"]),
                 format_percent(
                     attachment_joint.normalize(adapter.encoder["attachment"]["angle"])
                     * 100
                 ),
-                format_angle(),
+                format_angle_low(),
             )
         else:
             table.add_row("Attachment")

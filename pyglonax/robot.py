@@ -260,7 +260,9 @@ class Robot:
         frame = self._forward_kinematics_frame(self.position_state[0], joint_name)
         return frame[:3, 3]
 
-    def _forward_kinematics_frame(self, joint_parameters, joint_name=None) -> np.ndarray:
+    def _forward_kinematics_frame(
+        self, joint_parameters, joint_name=None
+    ) -> np.ndarray:
         if len(self.joints) != len(joint_parameters):
             raise ValueError(
                 f"joint_parameters has length {len(joint_parameters)} but robot has {len(self.joints)} joints"
@@ -324,6 +326,7 @@ class Robot:
 
         return res.x
 
+    # TODO: Clean up
     def __str__(self) -> str:
         position_state = self.get_position_state_full().T
 
@@ -340,6 +343,7 @@ class Robot:
             s += f"  Joint={joint.name}, Actual={np.rad2deg(position_state[idx][0]):.2f}°, Desired={np.rad2deg(position_state[idx][1]):.2f}°, Error={np.rad2deg(position_state[idx][2]):.2f}°\n"
         return s
 
+    # TODO: Move to util
     def plot_robot(self):
         import matplotlib
         import matplotlib.pyplot as plt
