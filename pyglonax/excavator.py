@@ -70,7 +70,7 @@ class ExcavatorAdapter(Adapter):
             self.encoder["frame"] = {}
         if signal.function == 0:
             self.encoder["frame"]["position"] = signal.angle
-            self.encoder["frame"]["angle"] = signal.angle / 100
+            self.encoder["frame"]["angle"] = signal.angle
             logging.debug(f"Frame position: {signal.angle:.21}")
 
     def _on_boom_signal(self, signal):
@@ -78,7 +78,7 @@ class ExcavatorAdapter(Adapter):
             self.encoder["boom"] = {}
         if signal.function == 0:
             self.encoder["boom"]["position"] = signal.angle
-            self.encoder["boom"]["angle"] = (signal.angle - 104) / 100
+            self.encoder["boom"]["angle"] = signal.angle - 1.047
             logging.debug(f"Boom position: {signal.angle:.1f}")
 
     def _on_arm_signal(self, signal):
@@ -86,7 +86,7 @@ class ExcavatorAdapter(Adapter):
             self.encoder["arm"] = {}
         if signal.function == 0:
             self.encoder["arm"]["position"] = signal.angle
-            self.encoder["arm"]["angle"] = signal.angle / 100
+            self.encoder["arm"]["angle"] = signal.angle
             logging.debug(f"Arm position: {signal.angle:.1f}")
 
     def _on_attachment_signal(self, signal):
@@ -94,7 +94,7 @@ class ExcavatorAdapter(Adapter):
             self.encoder["attachment"] = {}
         if signal.function == 0:
             self.encoder["attachment"]["position"] = signal.angle
-            self.encoder["attachment"]["angle"] = signal.angle / 100
+            self.encoder["attachment"]["angle"] = signal.angle
             logging.debug(f"Attachment position: {signal.angle:.1f}")
 
     def is_initialized(self):
