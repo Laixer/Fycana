@@ -107,7 +107,7 @@ class Header:
         grid.add_column(justify="right")
 
         grid.add_row(
-            "[green3]Connected",
+            "[green3]Connected" if adapter.status == adapter.ConnectionState.CONNECTED else "[red3]Disconnected",
             f"{excavator.name} [b]{excavator.model}[/b]",
             adapter.host,
         )
@@ -389,6 +389,9 @@ with Live(layout, refresh_per_second=20) as live:
                 excavator.boom = adapter.encoder["boom"]["angle"]
                 excavator.arm = adapter.encoder["arm"]["angle"]
                 excavator.attachment = adapter.encoder["attachment"]["angle"]
+
+            if adapter.status == adapter.ConnectionState.DISCONNECTED:
+                adapter.restart()
 
             live.update(layout)
             time.sleep(0.1)
