@@ -3,6 +3,9 @@ import time
 import grpc
 import threading
 
+from enum import Enum
+
+
 from . import vms_pb2, vms_pb2_grpc
 
 
@@ -11,7 +14,16 @@ class Adapter:
     Adapter to remote machine
     """
 
+    class ConnectionState(Enum):
+        """
+        Connection state
+        """
+
+        DISCONNECTED = 0
+        CONNECTED = 1
+
     last_signal = 0
+    status = ConnectionState.DISCONNECTED
 
     def signal_event(self, signal):
         """
@@ -31,6 +43,7 @@ class Adapter:
                     break
 
                 self.last_signal = time.time()
+                self.status = self.ConnectionState.CONNECTED
                 self.signal_event(signal)
         except grpc.RpcError as e:
             match e.code():
@@ -41,6 +54,7 @@ class Adapter:
                 case _:
                     logging.error("Error: %s", e.code())
 
+        self.status = self.ConnectionState.DISCONNECTED
         logging.debug("Signal listener stopped")
 
     def __init__(self, host="localhost:50051"):
@@ -51,7 +65,10 @@ class Adapter:
             host (str): remote machine host.
         """
         self._host = host
-        self._channel = grpc.insecure_channel(host)
+        self._setup()
+
+    def _setup(self):
+        self._channel = grpc.insecure_channel(self._host)
         self._stub = vms_pb2_grpc.VehicleManagementStub(self._channel)
 
         self._event = threading.Event()
@@ -68,6 +85,7 @@ class Adapter:
         except grpc.RpcError as e:
             match e.code():
                 case grpc.StatusCode.UNAVAILABLE:
+                    self.status = self.ConnectionState.DISCONNECTED
                     logging.error("Unable to connect to remote machine: %s", self._host)
                 case grpc.StatusCode.CANCELLED:
                     logging.debug("Signal motion command")
@@ -88,6 +106,13 @@ class Adapter:
         """Enables motion"""
         self._commit(vms_pb2.Motion(type=vms_pb2.Motion.RESUME_ALL))
 
+    def restart(self):
+        """Restarts the machine"""
+        logging.debug("Restarting machine")
+        self.stop()
+        self._setup()
+        self.start()
+
     def start(self):
         """Starts the machine"""
         logging.debug("Starting machine")
@@ -101,5 +126,5 @@ class Adapter:
         self._signal_thread.join()
 
     def idle(self):
-        while True:
+        while self.status == self.ConnectionState.CONNECTED:
             time.sleep(0.1)
