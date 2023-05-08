@@ -107,7 +107,9 @@ class Header:
         grid.add_column(justify="right")
 
         grid.add_row(
-            "[green3]Connected" if adapter.status == adapter.ConnectionState.CONNECTED else "[red3]Disconnected",
+            "[green3]Connected"
+            if adapter.status == adapter.ConnectionState.CONNECTED
+            else "[red3]Disconnected",
             f"{excavator.name} [b]{excavator.model}[/b]",
             adapter.host,
         )
@@ -166,9 +168,26 @@ class VMSPanel:
         grid = Table.grid(expand=True)
         grid.add_column(ratio=1)
         grid.add_column(justify="right")
+        grid.add_column(justify="right")
+        grid.add_column(justify="right")
 
-        grid.add_row("CPU", format_percent(12))
-        grid.add_row("Memory", format_percent(45))
+        if "cpu_1" in adapter.vms:
+            grid.add_row(
+                "CPU",
+                format_percent(adapter.vms["cpu_1"]),
+                format_percent(adapter.vms["cpu_5"]),
+                format_percent(adapter.vms["cpu_15"]),
+            )
+        else:
+            grid.add_row("CPU")
+        if "memory" in adapter.vms:
+            grid.add_row("Memory", "", "", format_percent(adapter.vms["memory"]))
+        else:
+            grid.add_row("Memory")
+        if "swap" in adapter.vms:
+            grid.add_row("Swap", "", "", format_percent(adapter.vms["swap"]))
+        else:
+            grid.add_row("Swap")
 
         return Panel(grid, title="[bright_cyan][ VMS ]", style="on grey11")
 
