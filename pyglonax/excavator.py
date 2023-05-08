@@ -27,6 +27,7 @@ class ExcavatorAdapter(Adapter):
 
     encoder = {}
     engine = {}
+    vms = {}
 
     def signal_event(self, signal):
         """
@@ -47,12 +48,27 @@ class ExcavatorAdapter(Adapter):
                 self._on_attachment_signal(signal)
             case 0x0:
                 self._on_engine_signal(signal)
+            case 0x9E:
+                self._on_host_metric(signal)
             case _:
                 logging.debug("Unknown signal: %s", signal)
 
-    @property
-    def host(self):
-        return self._host
+    def _on_host_metric(self, signal):
+        if signal.function == 382:
+            self.vms["memory"] = signal.percent
+            logging.debug(f"Memory: {signal.percent}%")
+        if signal.function == 383:
+            self.vms["swap"] = signal.percent
+            logging.debug(f"Swap: {signal.percent}%")
+        if signal.function == 593:
+            self.vms["cpu_1"] = signal.percent
+            logging.debug(f"CPU 1: {signal.percent}%")
+        if signal.function == 594:
+            self.vms["cpu_5"] = signal.percent
+            logging.debug(f"CPU 2: {signal.percent}%")
+        if signal.function == 595:
+            self.vms["cpu_15"] = signal.percent
+            logging.debug(f"CPU 3: {signal.percent}%")
 
     def _on_engine_signal(self, signal):
         if signal.function == 0:

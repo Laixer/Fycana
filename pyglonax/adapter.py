@@ -75,6 +75,10 @@ class Adapter:
         self._signal_thread = threading.Thread(target=self._on_signal, args=())
 
     @property
+    def host(self):
+        return self._host
+
+    @property
     def signal_elapsed_time(self) -> float:
         """Returns the elapsed time in seconds since the last signal"""
         return time.time() - self.last_signal
