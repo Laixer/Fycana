@@ -205,77 +205,22 @@ class EncoderTable:
         table.add_column("Percentage", justify="right")
         table.add_column("Bounds Upper", justify="right")
 
-        if "frame" in adapter.encoder:
-            frame_joint = excavator.frame_joint
-            normal = frame_joint.normalize(adapter.encoder["frame"]["angle"])
+        for joint in excavator.joints:
+            encoder_name = joint.name[:-6]
+            if encoder_name in adapter.encoder:
+                normal = joint.normalize(adapter.encoder[encoder_name]["angle"])
 
-            table.add_row(
-                "Frame",
-                "{:3.3f}".format(adapter.encoder["frame"]["position"]),
-                format_angle_low(frame_joint.lower_bound),
-                format_angle(adapter.encoder["frame"]["angle"]),
-                format_percent(
-                    normal * 100,
-                    style="red3" if normal > 1 else "white",
-                ),
-                format_angle_low(frame_joint.upper_bound),
-            )
-        else:
-            table.add_row("Frame")
-
-        if "boom" in adapter.encoder:
-            boom_joint = excavator.boom_joint
-            normal = boom_joint.normalize(adapter.encoder["boom"]["angle"])
-
-            table.add_row(
-                "Boom",
-                "{:3.3f}".format(adapter.encoder["boom"]["position"]),
-                format_angle_low(boom_joint.lower_bound),
-                format_angle(adapter.encoder["boom"]["angle"]),
-                format_percent(
-                    normal * 100,
-                    style="red3" if normal > 1 else "white",
-                ),
-                format_angle_low(boom_joint.upper_bound),
-            )
-        else:
-            table.add_row("Boom")
-
-        if "arm" in adapter.encoder:
-            arm_joint = excavator.arm_joint
-            normal = arm_joint.normalize(adapter.encoder["arm"]["angle"])
-
-            table.add_row(
-                "Arm",
-                "{:3.3f}".format(adapter.encoder["arm"]["position"]),
-                format_angle_low(arm_joint.lower_bound),
-                format_angle(adapter.encoder["arm"]["angle"]),
-                format_percent(
-                    normal * 100,
-                    style="red3" if normal > 1 else "white",
-                ),
-                format_angle_low(arm_joint.upper_bound),
-            )
-        else:
-            table.add_row("Arm")
-
-        if "attachment" in adapter.encoder:
-            attachment_joint = excavator.attachment_joint
-            normal = attachment_joint.normalize(adapter.encoder["attachment"]["angle"])
-
-            table.add_row(
-                "Attachment",
-                "{:3.3f}".format(adapter.encoder["attachment"]["position"]),
-                format_angle_low(attachment_joint.lower_bound),
-                format_angle(adapter.encoder["attachment"]["angle"]),
-                format_percent(
-                    normal * 100,
-                    style="red3" if normal > 1 else "white",
-                ),
-                format_angle_low(attachment_joint.upper_bound),
-            )
-        else:
-            table.add_row("Attachment")
+                table.add_row(
+                    joint.name,
+                    "{:3.3f}".format(adapter.encoder[encoder_name]["position"]),
+                    format_angle_low(joint.lower_bound),
+                    format_angle(adapter.encoder[encoder_name]["angle"]),
+                    format_percent(
+                        normal * 100,
+                        style="red3" if normal > 1 else "white",
+                    ),
+                    format_angle_low(joint.upper_bound),
+                )
 
         return table
 
