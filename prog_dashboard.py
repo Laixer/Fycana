@@ -51,13 +51,13 @@ def format_angle_low(value=None) -> Text:
     return text
 
 
-def format_percent(value=None) -> Text:
+def format_percent(value=None, style="white") -> Text:
     text = Text()
 
     if value is None:
         return text
 
-    text.append("{:>.1f}".format(value))
+    text.append("{:>.1f}".format(value), style=style)
     text.append("%", style="bright_black")
 
     return text
@@ -207,6 +207,7 @@ class EncoderTable:
 
         if "frame" in adapter.encoder:
             frame_joint = excavator.frame_joint
+            normal = frame_joint.normalize(adapter.encoder["frame"]["angle"])
 
             table.add_row(
                 "Frame",
@@ -214,7 +215,8 @@ class EncoderTable:
                 format_angle_low(frame_joint.lower_bound),
                 format_angle(adapter.encoder["frame"]["angle"]),
                 format_percent(
-                    frame_joint.normalize(adapter.encoder["frame"]["angle"]) * 100
+                    normal * 100,
+                    style="red3" if normal > 1 else "white",
                 ),
                 format_angle_low(frame_joint.upper_bound),
             )
@@ -223,6 +225,7 @@ class EncoderTable:
 
         if "boom" in adapter.encoder:
             boom_joint = excavator.boom_joint
+            normal = boom_joint.normalize(adapter.encoder["boom"]["angle"])
 
             table.add_row(
                 "Boom",
@@ -230,7 +233,8 @@ class EncoderTable:
                 format_angle_low(boom_joint.lower_bound),
                 format_angle(adapter.encoder["boom"]["angle"]),
                 format_percent(
-                    boom_joint.normalize(adapter.encoder["boom"]["angle"]) * 100
+                    normal * 100,
+                    style="red3" if normal > 1 else "white",
                 ),
                 format_angle_low(boom_joint.upper_bound),
             )
@@ -239,6 +243,7 @@ class EncoderTable:
 
         if "arm" in adapter.encoder:
             arm_joint = excavator.arm_joint
+            normal = arm_joint.normalize(adapter.encoder["arm"]["angle"])
 
             table.add_row(
                 "Arm",
@@ -246,7 +251,8 @@ class EncoderTable:
                 format_angle_low(arm_joint.lower_bound),
                 format_angle(adapter.encoder["arm"]["angle"]),
                 format_percent(
-                    arm_joint.normalize(adapter.encoder["arm"]["angle"]) * 100
+                    normal * 100,
+                    style="red3" if normal > 1 else "white",
                 ),
                 format_angle_low(arm_joint.upper_bound),
             )
@@ -255,6 +261,7 @@ class EncoderTable:
 
         if "attachment" in adapter.encoder:
             attachment_joint = excavator.attachment_joint
+            normal = attachment_joint.normalize(adapter.encoder["attachment"]["angle"])
 
             table.add_row(
                 "Attachment",
@@ -262,8 +269,8 @@ class EncoderTable:
                 format_angle_low(attachment_joint.lower_bound),
                 format_angle(adapter.encoder["attachment"]["angle"]),
                 format_percent(
-                    attachment_joint.normalize(adapter.encoder["attachment"]["angle"])
-                    * 100
+                    normal * 100,
+                    style="red3" if normal > 1 else "white",
                 ),
                 format_angle_low(attachment_joint.upper_bound),
             )
@@ -404,10 +411,46 @@ with Live(layout, refresh_per_second=20) as live:
     try:
         while True:
             if adapter.is_initialized():
-                excavator.frame = adapter.encoder["frame"]["angle"]
-                excavator.boom = adapter.encoder["boom"]["angle"]
-                excavator.arm = adapter.encoder["arm"]["angle"]
-                excavator.attachment = adapter.encoder["attachment"]["angle"]
+                frame_joint = excavator.frame_joint
+                if frame_joint.iswithin_bounds(adapter.encoder["frame"]["angle"]):
+                    excavator.frame = adapter.encoder["frame"]["angle"]
+                else:
+                    if adapter.encoder["frame"]["angle"] > frame_joint.upper_bound:
+                        excavator.frame = frame_joint.upper_bound
+                    else:
+                        excavator.frame = frame_joint.lower_bound
+
+                boom_joint = excavator.boom_joint
+                if boom_joint.iswithin_bounds(adapter.encoder["boom"]["angle"]):
+                    excavator.boom = adapter.encoder["boom"]["angle"]
+                else:
+                    if adapter.encoder["boom"]["angle"] > boom_joint.upper_bound:
+                        excavator.boom = boom_joint.upper_bound
+                    else:
+                        excavator.boom = boom_joint.lower_bound
+
+                arm_joint = excavator.arm_joint
+                if arm_joint.iswithin_bounds(adapter.encoder["arm"]["angle"]):
+                    excavator.arm = adapter.encoder["arm"]["angle"]
+                else:
+                    if adapter.encoder["arm"]["angle"] > arm_joint.upper_bound:
+                        excavator.arm = arm_joint.upper_bound
+                    else:
+                        excavator.arm = arm_joint.lower_bound
+
+                attachment_joint = excavator.attachment_joint
+                if attachment_joint.iswithin_bounds(
+                    adapter.encoder["attachment"]["angle"]
+                ):
+                    excavator.attachment = adapter.encoder["attachment"]["angle"]
+                else:
+                    if (
+                        adapter.encoder["attachment"]["angle"]
+                        > attachment_joint.upper_bound
+                    ):
+                        excavator.attachment = attachment_joint.upper_bound
+                    else:
+                        excavator.attachment = attachment_joint.lower_bound
 
             if adapter.status == adapter.ConnectionState.DISCONNECTED:
                 adapter.restart()
