@@ -193,8 +193,6 @@ class VMSPanel:
 
 
 class EncoderTable:
-    """Display header with clock."""
-
     def __rich__(self):
         table = Table(show_edge=False, expand=True)
 
@@ -217,7 +215,7 @@ class EncoderTable:
                     format_angle(adapter.encoder[encoder_name]["angle"]),
                     format_percent(
                         normal * 100,
-                        style="red3" if normal > 1 else "white",
+                        style="red3" if normal > 1 else "green3",
                     ),
                     format_angle_low(joint.upper_bound),
                 )
@@ -225,9 +223,7 @@ class EncoderTable:
         return table
 
 
-class KinematicGrid:
-    """Display header with clock."""
-
+class OriginTranslationGrid:
     def __rich__(self) -> Table:
         grid = Table.grid(expand=True)
 
@@ -251,9 +247,7 @@ class KinematicGrid:
         return grid
 
 
-class Kinematic2Grid:
-    """Display header with clock."""
-
+class OriginOrientationGrid:
     def __rich__(self) -> Table:
         grid = Table.grid(expand=True)
 
@@ -277,9 +271,7 @@ class Kinematic2Grid:
         return grid
 
 
-class MotionGrid:
-    """Display header with clock."""
-
+class KinematicGrid:
     def __rich__(self) -> Table:
         grid = Table.grid(expand=True)
 
@@ -320,16 +312,20 @@ layout["vms"].update(VMSPanel())
 layout["footer"].update(Footer())
 layout["trans"].update(
     Panel(
-        KinematicGrid(), title="[bright_cyan][ Origin Translation ]", style="on grey11"
+        OriginTranslationGrid(),
+        title="[bright_cyan][ Origin Translation ]",
+        style="on grey11",
     )
 )
 layout["or"].update(
     Panel(
-        Kinematic2Grid(), title="[bright_cyan][ Origin Orientation ]", style="on grey11"
+        OriginOrientationGrid(),
+        title="[bright_cyan][ Origin Orientation ]",
+        style="on grey11",
     )
 )
 layout["box2"].update(
-    Panel(MotionGrid(), title="[bright_cyan][ Effector AGL ]", style="on grey11")
+    Panel(KinematicGrid(), title="[bright_cyan][ Effector AGL ]", style="on grey11")
 )
 
 
