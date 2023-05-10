@@ -288,32 +288,15 @@ class MotionGrid:
         grid.add_column("Y", justify="right", width=5)
         grid.add_column("Z", justify="right", width=5)
 
-        effector = excavator.forward_kinematics(joint_name="frame_joint")
-        grid.add_row(
-            f"Frame point",
-            "{:>.2f}".format(effector[0]),
-            "{:>.2f}".format(effector[1]),
-            "{:>.2f}".format(effector[2]),
-            style="grey62",
-        )
-
-        effector = excavator.forward_kinematics(joint_name="boom_joint")
-        grid.add_row(
-            f"Boom point",
-            "{:>.2f}".format(effector[0]),
-            "{:>.2f}".format(effector[1]),
-            "{:>.2f}".format(effector[2]),
-            style="grey62",
-        )
-
-        effector = excavator.forward_kinematics(joint_name="arm_joint")
-        grid.add_row(
-            f"Arm point",
-            "{:>.2f}".format(effector[0]),
-            "{:>.2f}".format(effector[1]),
-            "{:>.2f}".format(effector[2]),
-            style="grey62",
-        )
+        for joint in excavator.joints:
+            effector = excavator.forward_kinematics(joint_name=joint.name)
+            grid.add_row(
+                f"{joint.name}",
+                "{:>.2f}".format(effector[0]),
+                "{:>.2f}".format(effector[1]),
+                "{:>.2f}".format(effector[2]),
+                style="grey62",
+            )
 
         effector = excavator.forward_kinematics()
         grid.add_row(
