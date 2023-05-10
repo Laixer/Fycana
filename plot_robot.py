@@ -24,6 +24,7 @@ def animate(i):
     excavator.frame = adapter.encoder["frame"]["angle"]
     excavator.boom = adapter.encoder["boom"]["angle"]
     excavator.arm = adapter.encoder["arm"]["angle"]
+    excavator.attachment = adapter.encoder["attachment"]["angle"]
 
     x = [0]
     y = [0]
