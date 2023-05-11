@@ -110,7 +110,7 @@ class ExcavatorAdapter(Adapter):
             self.encoder["attachment"] = {}
         if signal.function == 0:
             self.encoder["attachment"]["position"] = signal.angle
-            self.encoder["attachment"]["angle"] = signal.angle
+            self.encoder["attachment"]["angle"] = signal.angle - 0.962
             logging.debug(f"Attachment position: {signal.angle:.3f}")
 
     def is_initialized(self):
