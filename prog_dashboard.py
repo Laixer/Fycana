@@ -215,7 +215,7 @@ class EncoderTable:
                     format_angle(adapter.encoder[encoder_name]["angle"]),
                     format_percent(
                         normal * 100,
-                        style="red3" if normal > 1 else "green3",
+                        style="red3" if normal > 1 or normal < 0 else "green3",
                     ),
                     format_angle_low(joint.upper_bound),
                 )
