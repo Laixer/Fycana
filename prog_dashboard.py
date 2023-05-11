@@ -159,7 +159,7 @@ class EnginePanel:
         else:
             grid.add_row("RPM", style="bold bright_yellow")
 
-        return Panel(grid, title="[bright_cyan][ Engine ]", style="on grey11")
+        return Panel(grid, title="[magenta3][ Engine ]", style="on grey11")
 
 
 class VMSPanel:
@@ -191,7 +191,7 @@ class VMSPanel:
         else:
             grid.add_row("Swap")
 
-        return Panel(grid, title="[bright_cyan][ VMS ]", style="on grey11")
+        return Panel(grid, title="[magenta3][ VMS ]", style="on grey11")
 
 
 class EncoderTable:
@@ -254,9 +254,9 @@ class OriginOrientationGrid:
         grid = Table(box=None, pad_edge=False, show_edge=False, expand=True)
 
         grid.add_column()
-        grid.add_column("X", justify="right", width=5)
-        grid.add_column("Y", justify="right", width=5)
-        grid.add_column("Z", justify="right", width=5)
+        grid.add_column("Roll", justify="right", width=5)
+        grid.add_column("Pitch", justify="right", width=5)
+        grid.add_column("Yaw", justify="right", width=5)
 
         for joint in excavator.joints:
             if joint.origin_orientation is not None:
@@ -312,7 +312,7 @@ class KinematicGrid:
 layout = make_layout()
 layout["header"].update(Header())
 layout["encoder"].update(
-    Panel(EncoderTable(), title="[bright_cyan][ Encoders ]", style="on grey15")
+    Panel(EncoderTable(), title="[magenta3][ Encoders ]", style="on grey15")
 )
 layout["engine"].update(EnginePanel())
 layout["vms"].update(VMSPanel())
@@ -320,19 +320,19 @@ layout["footer"].update(Footer())
 layout["trans"].update(
     Panel(
         OriginTranslationGrid(),
-        title="[bright_cyan][ Origin Translation ]",
+        title="[magenta3][ Origin Translation ]",
         style="on grey11",
     )
 )
 layout["or"].update(
     Panel(
         OriginOrientationGrid(),
-        title="[bright_cyan][ Origin Orientation ]",
+        title="[magenta3][ Origin Orientation ]",
         style="on grey11",
     )
 )
 layout["box2"].update(
-    Panel(KinematicGrid(), title="[bright_cyan][ Effector AGL ]", style="on grey15")
+    Panel(KinematicGrid(), title="[magenta3][ Effector AGL ]", style="on grey15")
 )
 
 
