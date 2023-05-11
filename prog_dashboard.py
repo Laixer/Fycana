@@ -12,6 +12,7 @@ from rich.panel import Panel
 from rich.console import Group
 from rich.align import Align
 from rich.text import Text
+from rich import box
 
 config = get_config()
 
@@ -87,7 +88,7 @@ def make_layout() -> Layout:
         Layout(name="footer", size=3),
     )
     layout["main"].split_row(
-        Layout(name="side"), Layout(name="body", ratio=2, minimum_size=50)
+        Layout(name="side", ratio=3), Layout(name="body", ratio=5, minimum_size=50)
     )
     layout["side"].split(Layout(name="telemetric"), Layout(name="box2"))
     layout["telemetric"].split_row(Layout(name="engine"), Layout(name="vms"))
@@ -166,6 +167,7 @@ class VMSPanel:
 
     def __rich__(self) -> Panel:
         grid = Table.grid(expand=True)
+
         grid.add_column(ratio=1)
         grid.add_column(justify="right")
         grid.add_column(justify="right")
@@ -194,9 +196,9 @@ class VMSPanel:
 
 class EncoderTable:
     def __rich__(self):
-        table = Table(show_edge=False, expand=True)
+        table = Table(box=box.MINIMAL, pad_edge=False, show_edge=False, expand=True)
 
-        table.add_column("Encoder", no_wrap=True, min_width=10)
+        table.add_column("Joint Encoder", no_wrap=True, min_width=10)
         table.add_column("Position", justify="right", style="grey66")
         table.add_column("Bounds Lower", justify="right")
         table.add_column("Relative Angle", justify="right")
@@ -225,7 +227,7 @@ class EncoderTable:
 
 class OriginTranslationGrid:
     def __rich__(self) -> Table:
-        grid = Table.grid(expand=True)
+        grid = Table(box=None, pad_edge=False, show_edge=False, expand=True)
 
         grid.add_column()
         grid.add_column("X", justify="right", width=5)
@@ -249,7 +251,7 @@ class OriginTranslationGrid:
 
 class OriginOrientationGrid:
     def __rich__(self) -> Table:
-        grid = Table.grid(expand=True)
+        grid = Table(box=None, pad_edge=False, show_edge=False, expand=True)
 
         grid.add_column()
         grid.add_column("X", justify="right", width=5)
@@ -273,7 +275,7 @@ class OriginOrientationGrid:
 
 class KinematicGrid:
     def __rich__(self) -> Table:
-        grid = Table.grid(expand=True)
+        grid = Table(box=None, pad_edge=False, show_edge=False, expand=True)
 
         grid.add_column()
         grid.add_column("X", justify="right", width=5)
@@ -305,7 +307,7 @@ class KinematicGrid:
 layout = make_layout()
 layout["header"].update(Header())
 layout["encoder"].update(
-    Panel(EncoderTable(), title="[bright_cyan][ Encoders ]", style="on grey19")
+    Panel(EncoderTable(), title="[bright_cyan][ Encoders ]", style="on grey15")
 )
 layout["engine"].update(EnginePanel())
 layout["vms"].update(VMSPanel())
@@ -325,7 +327,7 @@ layout["or"].update(
     )
 )
 layout["box2"].update(
-    Panel(KinematicGrid(), title="[bright_cyan][ Effector AGL ]", style="on grey11")
+    Panel(KinematicGrid(), title="[bright_cyan][ Effector AGL ]", style="on grey15")
 )
 
 
