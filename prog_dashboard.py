@@ -281,14 +281,18 @@ class KinematicGrid:
         grid.add_column("X", justify="right", width=5)
         grid.add_column("Y", justify="right", width=5)
         grid.add_column("Z", justify="right", width=5)
+        grid.add_column("Cumulative Angle", justify="right", width=20)
 
-        for joint in excavator.joints:
+        import numpy as np
+
+        for idx, joint in enumerate(excavator.joints):
             effector = excavator.forward_kinematics(joint_name=joint.name)
             grid.add_row(
-                f"{joint.name}",
+                joint.name,
                 "{:>.2f}".format(effector[0]),
                 "{:>.2f}".format(effector[1]),
                 "{:>.2f}".format(effector[2]),
+                format_angle(np.sum(excavator.position_state[0][2 : idx + 1])),
                 style="grey62",
             )
 
@@ -298,6 +302,7 @@ class KinematicGrid:
             "{:>.2f}".format(effector[0]),
             "{:>.2f}".format(effector[1]),
             "{:>.2f}".format(effector[2]),
+            format_angle(np.sum(excavator.position_state[0][2:])),
             style="bold bright_yellow",
         )
 
