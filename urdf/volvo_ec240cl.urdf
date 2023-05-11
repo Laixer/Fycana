@@ -17,7 +17,6 @@
     <joint name="undercarriage_joint" type="fixed">
         <parent link="base"/>
         <child link="undercarriage"/>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
 
     <link name="undercarriage">
@@ -45,7 +44,7 @@
     <joint name="frame_joint" type="revolute">
         <parent link="undercarriage"/>
         <child link="frame"/>
-        <origin xyz="0 0 1.295" rpy="0 0 0"/>
+        <origin xyz="0 0 1.295"/>
         <axis xyz="0 0 1"/>
         <power coefficient="5" lower="0.02" upper="32767" />
         <limit lower="0" upper="6.283" velocity="0.5"/>
@@ -72,7 +71,7 @@
     <joint name="boom_joint" type="revolute">
         <parent link="frame"/>
         <child link="boom"/>
-        <origin xyz="0.16 0 0.595" rpy="0 0 0" />
+        <origin xyz="0.16 0 0.595"/>
         <axis xyz="0 1 0"/>
         <!-- Bound are not correct -->
         <limit effort="1000.0" lower="-1.047" upper="0.785" velocity="0.5"/>
