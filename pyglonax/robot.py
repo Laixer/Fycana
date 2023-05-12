@@ -54,7 +54,7 @@ class Joint:
         """Return the default value of the joint"""
         return (
             0.0
-            if np.isinf(self.lower_bound) or self.iswithin_bounds(0.0)
+            if np.isinf(self.lower_bound) or self.is_within_bounds(0.0)
             else self.lower_bound
         )
 
@@ -62,9 +62,13 @@ class Joint:
         """Normalize the given value to the domain of the joint"""
         return (value - self.lower_bound) / self.domain
 
-    def iswithin_bounds(self, value):
+    def is_within_bounds(self, value):
         """Check if the given value is within the bounds of the joint"""
         return self.lower_bound <= value <= self.upper_bound
+
+    def clip(self, value):
+        """Clip the given value to the bounds of the joint"""
+        return np.clip(value, self.lower_bound, self.upper_bound)
 
     def __str__(self):
         return f"Joint={self.name}, Type={self.type}, OriginTranslation={util.numpy3d_to_string(self.origin_translation)}, OriginOrientation={util.numpy3d_to_string(self.origin_orientation)}, Rotation={util.numpy3d_to_string(self.rotation)}, Translation={util.numpy3d_to_string(self.translation)}, Bounds={self.bounds}"
@@ -226,7 +230,7 @@ class Robot:
         idx = self._get_joint_index_by_name(name)
         if self.joints[idx].type == "fixed":
             raise ValueError(f"Joint {name} is fixed")
-        if not self.joints[idx].iswithin_bounds(value):
+        if not self.joints[idx].is_within_bounds(value):
             raise ValueError(f"Value {value} is out of bounds for joint {name}")
         self.position_state[dim][idx] = value
 
@@ -236,8 +240,8 @@ class Robot:
     def get_position_state_full(self):
         return np.vstack((self.position_state, self.get_position_error()))
 
-    def is_objective_reached(self):
-        return np.allclose(self.get_position_error(), 0.0, atol=0.005)
+    def is_objective_reached(self, tolerance=0.005):
+        return np.allclose(self.get_position_error(), 0.0, atol=tolerance)
 
     def _axis_aligned_reach(self) -> np.ndarray:
         frame = self._forward_kinematics_frame([0, 0, 0, 0, 0])
@@ -308,7 +312,7 @@ class Robot:
         ub = [joint.upper_bound for joint in self.joints]
 
         def optimize_function(x):
-            frame = self._forward_kinematics_frame(x)
+            frame = self._forward_kinematics_frame(x, joint_name="attachment_joint")
             fk = frame[:3, 3]
 
             target_error = fk - target
