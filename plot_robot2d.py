@@ -18,7 +18,7 @@ adapter.start()
 adapter.wait_until_initialized()
 
 
-fig, ax = plt.subplots(1, 1, figsize=(10, 10), subplot_kw=dict(projection="3d"))
+fig, ax = plt.subplots(2, 2, figsize=(10, 10))
 
 
 def animate(i):
@@ -27,7 +27,9 @@ def animate(i):
     excavator.arm = adapter.encoder["arm"]["angle"]
     excavator.attachment = adapter.encoder["attachment"]["angle"]
 
-    ax.clear()
+    ax[0][0].clear()
+    ax[0][1].clear()
+    ax[1][0].clear()
 
     x = [0]
     y = [0]
@@ -39,24 +41,47 @@ def animate(i):
         y.append(effector[1])
         z.append(effector[2])
 
-        ax.text(
+        ax[0][0].text(
             effector[0],
+            effector[2],
+            "({:.2f}, {:.2f})".format(effector[0], effector[2]),
+        ),
+    
+        ax[0][1].text(
             effector[1],
             effector[2],
-            "({:.2f}, {:.2f}, {:.2f})".format(effector[0], effector[1], effector[2]),
+            "({:.2f}, {:.2f})".format(effector[1], effector[2]),
+        ),
+    
+        ax[1][0].text(
+            effector[0],
+            effector[1],
+            "({:.2f}, {:.2f})".format(effector[0], effector[1]),
         ),
 
-    ax.set_xlim(-10, 10)
-    ax.set_ylim(-10, 10)
-    ax.set_zlim(0, 10)
+    ax[0][0].set_xlim(-10, 10)
+    ax[0][0].set_ylim(0, 10)
+    
+    ax[0][1].set_xlim(-10, 10)
+    ax[0][1].set_ylim(0, 10)
 
-    ax.set_xlabel("X Axis")
-    ax.set_ylabel("Y Axis")
-    ax.set_zlabel("Z Axis")
-    ax.plot(x, y, z, "ro-")
+    ax[1][0].set_xlim(-10, 10)
+    ax[1][0].set_ylim(-10, 10)
+
+    ax[0][0].set_xlabel("X Axis")
+    ax[0][0].set_ylabel("Z Axis")
+    ax[0][0].plot(x, z, "ro-")
+
+    ax[0][1].set_xlabel("Y Axis")
+    ax[0][1].set_ylabel("Z Axis")
+    ax[0][1].plot(y, z, "ro-")
+
+    ax[1][0].set_xlabel("Y Axis")
+    ax[1][0].set_ylabel("Y Axis")
+    ax[1][0].plot(x, y, "ro-")
 
 
-ani = animation.FuncAnimation(fig, animate, interval=100)
+ani = animation.FuncAnimation(fig, animate, interval=10)
 plt.show()
 
 adapter.stop()
