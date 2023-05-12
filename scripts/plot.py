@@ -50,11 +50,13 @@ class MotionProfile:
 motion_profile_slew = MotionProfile(10_000, 12_000, 0.02, False)
 motion_profile_boom = MotionProfile(15_000, 12_000, 0.02, True)
 motion_profile_arm = MotionProfile(15_000, 12_000, 0.02, False)
+motion_profile_attachment = MotionProfile(15_000, 12_000, 0.02, False)
 
 
 plt.plot([x for x in np.arange(-np.pi, np.pi, 0.01)], [motion_profile_slew.proportional_power(x) for x in np.arange(-np.pi, np.pi, 0.01)], color='blue')
 # plt.plot([x for x in np.arange(-np.pi, np.pi, 0.01)], [motion_profile_boom.proportional_power_inverse(x) for x in np.arange(-np.pi, np.pi, 0.01)], color='purple')
 plt.plot([x for x in np.arange(-np.pi, np.pi, 0.01)], [motion_profile_arm.proportional_power(x) for x in np.arange(-np.pi, np.pi, 0.01)], color='red')
+plt.plot([x for x in np.arange(-np.pi, np.pi, 0.01)], [motion_profile_attachment.proportional_power(x) for x in np.arange(-np.pi, np.pi, 0.01)], color='blue')
 # plt.plot([x for x in np.arange(-np.pi, np.pi, 0.01)], [logistic(1, x) for x in np.arange(-np.pi, np.pi, 0.01)], color='green')
 plt.plot([x for x in np.arange(-np.pi, np.pi, 0.01)], [logistic(5, x) for x in np.arange(-np.pi, np.pi, 0.01)], color='brown')
 # plt.plot([x for x in np.arange(-np.pi, np.pi, 0.01)], [logistic(-5, x) for x in np.arange(-np.pi, np.pi, 0.01)], color='green')

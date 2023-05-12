@@ -3,14 +3,49 @@ import sys
 import time
 import numpy as np
 
-from pyglonax.excavator import Excavator, ExcavatorAdapter
+from pyglonax.excavator import Excavator, ExcavatorAdapter, ExcavatorActuator
 from pyglonax.util import get_config
 
 config = get_config()
 
 np.set_printoptions(formatter={"float": lambda x: "{0:0.2f}".format(x)})
 
-program = np.load(file="model/default_trainnig_v1.npy")
+
+class MotionProfile:
+    def __init__(self, scale, offset, lower_bound, inverse):
+        self.scale = scale
+        self.offset = offset
+        self.lower_bound = lower_bound
+        self.inverse = inverse
+
+    def proportional_power(self, value):
+        if abs(value) > self.lower_bound:
+            power = self.offset + min((abs(value) * self.scale), 32_767 - self.offset)
+            if value < 0:
+                return -power
+            else:
+                return power
+        else:
+            return 0
+
+    def proportional_power_inverse(self, value):
+        if abs(value) > self.lower_bound:
+            power = value * self.scale
+
+            if value > 0:
+                return max(-power, -(32_767 - self.offset)) - self.offset
+            else:
+                return min(-power, 32_767 - self.offset) + self.offset
+        else:
+            return 0
+
+
+motion_profile_slew = MotionProfile(10_000, 12_000, 0.02, False)
+motion_profile_boom = MotionProfile(15_000, 12_000, 0.02, True)
+motion_profile_arm = MotionProfile(15_000, 12_000, 0.02, False)
+motion_profile_attachment = MotionProfile(15_000, 12_000, 0.02, False)
+
+# program = np.load(file="model/default_trainnig_v1.npy")
 excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
 
 print(excavator)
@@ -34,13 +69,15 @@ excavator.boom = adapter.encoder["boom"]["angle"]
 excavator.arm = adapter.encoder["arm"]["angle"]
 excavator.attachment = adapter.encoder["attachment"]["angle"]
 
-effector = excavator.forward_kinematics()
-print("End effector:", effector)
+# effector = excavator.forward_kinematics(joint_name="attachment_joint")
+# print("End effector:", effector)
 
 # adapter.stop()
 # sys.exit(0)
 
-# print(excavator)
+### Kinematics test
+
+program = np.array([[7.73, 0.00, 2.29], [5.35, 0.00, 1.93]])
 
 print("Program:", program)
 
@@ -50,7 +87,7 @@ print("Program:", program)
 print("Starting program")
 
 for target in program:
-    effector = excavator.forward_kinematics()
+    effector = excavator.forward_kinematics(joint_name="attachment_joint")
     print("")
     print("End effector:", effector)
     print("Target:", target)
@@ -58,28 +95,87 @@ for target in program:
     excavator.inverse_kinematics(target)
 
     while True:
-        if excavator.is_objective_reached():
+        excavator.frame = adapter.encoder["frame"]["angle"]
+        excavator.boom = adapter.encoder["boom"]["angle"]
+        excavator.arm = adapter.encoder["arm"]["angle"]
+        excavator.attachment = adapter.encoder["attachment"]["angle"]
+
+        print()
+        error = excavator.get_position_error()[0]
+        print("Relative error:", error)
+
+        power_setting_slew = motion_profile_slew.proportional_power(error[1])
+        print("Power setting Slew:", int(power_setting_slew))
+        power_setting_boom = motion_profile_boom.proportional_power(error[2])
+        print("Power setting Boom:", int(power_setting_boom))
+        power_setting_arm = motion_profile_arm.proportional_power(error[3])
+        print("Power setting:", int(power_setting_arm))
+
+        adapter.change(
+            [
+                (ExcavatorActuator.Slew, int(power_setting_slew)),
+                (ExcavatorActuator.Boom, int(power_setting_boom)),
+                (ExcavatorActuator.Arm, int(power_setting_arm)),
+            ]
+        )
+
+        if excavator.is_objective_reached(tolerance=0.02):
             print("Objective reached")
             input("Press Enter to continue...")
             break
         else:
             print("Objective not reached")
 
-        e = excavator.get_position_error()[0]
-
-        print("Error:", e)
-
-        g = excavator.position_state[0] + e
-
-        print("Correction:", g)
-
-        excavator.frame = g[1]
-        excavator.boom = g[2]
-        excavator.arm = g[3]
-        excavator.attachment = g[4]
-
-        print("")
-
-        time.sleep(0.5)
+        time.sleep(0.1)
 
 adapter.stop()
+sys.exit(0)
+
+### Attachment test
+
+want = np.deg2rad(110)
+
+curr_angle = (np.sum(excavator.position_state[0][2:]),)
+print("Angle:", curr_angle[0])
+
+error = want - curr_angle[0]
+print("Error:", error)
+
+rel_angle = excavator.attachment + error
+print("Relative angle:", rel_angle)
+
+bc = excavator.attachment_joint.is_within_bounds(rel_angle)
+print("Within bounds:", bc)
+if not bc:
+    rel_angle = excavator.attachment_joint.clip(rel_angle)
+    print("Clipped angle:", rel_angle)
+
+input("Press Enter to continue...")
+
+while True:
+    excavator.frame = adapter.encoder["frame"]["angle"]
+    excavator.boom = adapter.encoder["boom"]["angle"]
+    excavator.arm = adapter.encoder["arm"]["angle"]
+    excavator.attachment = adapter.encoder["attachment"]["angle"]
+
+    print()
+    rel_error = rel_angle - excavator.attachment
+    print("Relative error:", rel_error)
+
+    power_setting = motion_profile_attachment.proportional_power(rel_error)
+    print("Power setting:", int(power_setting))
+
+    adapter.change(
+        [
+            (ExcavatorActuator.Attachment, int(power_setting)),
+        ]
+    )
+
+    if abs(rel_error) < 0.02:
+        print("Objective reached")
+        break
+
+    time.sleep(0.1)
+
+adapter.stop()
+sys.exit(0)

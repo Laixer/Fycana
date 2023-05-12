@@ -12,15 +12,20 @@ import numpy as np
 # v = np.arange(15)
 # m = v.reshape(3, 5)
 
-np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
+np.set_printoptions(formatter={"float": lambda x: "{0:0.2f}".format(x)})
 
-q = np.array([2.5, 3.5])
-norm = np.linalg.norm(q)
-print(norm)
+# q = np.array([2.5, 3.5])
+# norm = np.linalg.norm(q)
+# print(norm)
 
+
+bounds = (-0.96, 2.14)
+
+value = -824
+q = np.clip(value, -np.inf, bounds[1])
+print(q)
 
 sys.exit()
-
 # print(m.dtype)
 
 # m = np.empty((3, 4))
@@ -50,13 +55,15 @@ sys.exit()
 
 
 def functionyouwanttofit(x, y, z, t, u):
-    return np.array([x+y+z+t+u, x+y+z+t-u, x+y+z-t-u, x+y-z-t-u])  # baby test here but put what you want
+    return np.array(
+        [x + y + z + t + u, x + y + z + t - u, x + y + z - t - u, x + y - z - t - u]
+    )  # baby test here but put what you want
 
 
 def calc_chi2(parameters):
     x, y, z, t, u = parameters
     data = np.array([100, 250, 300, 500])
-    chi2 = sum((data-functionyouwanttofit(x, y, z, t, u))**2)
+    chi2 = sum((data - functionyouwanttofit(x, y, z, t, u)) ** 2)
     return chi2
 
 
@@ -82,7 +89,13 @@ u_min = 1
 u_max = 100
 
 parameters = [x_init, y_init, z_init, t_init, u_init]
-bounds = [[x_min, x_max], [y_min, y_max], [z_min, z_max], [t_min, t_max], [u_min, u_max]]
+bounds = [
+    [x_min, x_max],
+    [y_min, y_max],
+    [z_min, z_max],
+    [t_min, t_max],
+    [u_min, u_max],
+]
 result = opt.minimize(calc_chi2, parameters, bounds=bounds)
 
 print(result)
@@ -92,11 +105,13 @@ sys.exit(0)
 
 def ry_matrix(theta):
     """Rotation matrix around the Y axis"""
-    return np.array([
-        [np.cos(theta), 0, np.sin(theta)],
-        [0, 1, 0],
-        [-np.sin(theta), 0, np.cos(theta)]
-    ])
+    return np.array(
+        [
+            [np.cos(theta), 0, np.sin(theta)],
+            [0, 1, 0],
+            [-np.sin(theta), 0, np.cos(theta)],
+        ]
+    )
 
 
 def translation(x, y, z):
@@ -161,7 +176,7 @@ initial_angles = [-1, 1.57]
 # print("initial angles: ", initial_angles[::-1])
 
 
-matplotlib.use('TkAgg')
+matplotlib.use("TkAgg")
 
 # t = np.arange(0.0, 2.0, 0.01)
 # s = 1 + np.sin(2 * np.pi * t)
