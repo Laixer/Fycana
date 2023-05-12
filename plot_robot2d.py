@@ -59,14 +59,14 @@ def animate(i):
             "({:.2f}, {:.2f})".format(effector[0], effector[1]),
         ),
 
-    ax[0][0].set_xlim(-10, 10)
-    ax[0][0].set_ylim(0, 10)
+    ax[0][0].set_xlim(-12, 12)
+    ax[0][0].set_ylim(0, 12)
     
-    ax[0][1].set_xlim(-10, 10)
-    ax[0][1].set_ylim(0, 10)
+    ax[0][1].set_xlim(-12, 12)
+    ax[0][1].set_ylim(0, 12)
 
-    ax[1][0].set_xlim(-10, 10)
-    ax[1][0].set_ylim(-10, 10)
+    ax[1][0].set_xlim(-12, 12)
+    ax[1][0].set_ylim(-12, 12)
 
     ax[0][0].set_xlabel("X Axis")
     ax[0][0].set_ylabel("Z Axis")
@@ -81,7 +81,7 @@ def animate(i):
     ax[1][0].plot(x, y, "ro-")
 
 
-ani = animation.FuncAnimation(fig, animate, interval=10)
+ani = animation.FuncAnimation(fig, animate, interval=50)
 plt.show()
 
 adapter.stop()
