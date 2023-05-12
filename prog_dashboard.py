@@ -38,43 +38,27 @@ def format_angle(value=None) -> Text:
     return text
 
 
-def format_angle_low(value=None) -> Text:
-    text = Text()
-
-    if value is None:
-        text.append("inf", style="bright_black")
-        return text
-
-    text.append("{:7.2f}".format(value), style="chartreuse4")
-    text.append("rad", style="bright_black")
-    text.append(" ")
-    text.append("{:7.2f}".format(math.degrees(value)), style="yellow3")
-    text.append("°", style="bright_black")
-
-    return text
-
-
-def format_percent(value=None, style="white") -> Text:
+def format_percent(value=None) -> Text:
     text = Text()
 
     if value is None:
         return text
 
-    text.append("{:>.1f}".format(value), style=style)
+    text.append(
+        "{:>.1f}".format(value), style="red3" if value > 100 or value < 0 else "white"
+    )
     text.append("%", style="bright_black")
 
     return text
 
 
-def print_point(x, y, z) -> Text:
-    text = Text()
+def format_coord(value) -> Text:
+    text = Text(style="grey62")
 
-    text.append(" X:", style="bright_black")
-    text.append("{:6.2f}".format(x))
-    text.append(" Y:", style="bright_black")
-    text.append("{:6.2f}".format(y))
-    text.append(" Z:", style="bright_black")
-    text.append("{:6.2f}".format(z))
+    if value is None:
+        return text
+
+    text.append("{:5.2f}".format(value))
 
     return text
 
@@ -215,13 +199,10 @@ class EncoderTable:
                 table.add_row(
                     joint.name,
                     "{:3.3f}".format(adapter.encoder[encoder_name]["position"]),
-                    format_angle_low(joint.lower_bound),
+                    format_angle(joint.lower_bound),
                     format_angle(adapter.encoder[encoder_name]["angle"]),
-                    format_percent(
-                        normal * 100,
-                        style="red3" if normal > 1 or normal < 0 else "green3",
-                    ),
-                    format_angle_low(joint.upper_bound),
+                    format_percent(normal * 100),
+                    format_angle(joint.upper_bound),
                 )
 
         return table
