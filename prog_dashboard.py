@@ -318,46 +318,18 @@ with Live(layout, refresh_per_second=20) as live:
     try:
         while True:
             if adapter.is_initialized():
-                frame_joint = excavator.frame_joint
-                if frame_joint.iswithin_bounds(adapter.encoder["frame"]["angle"]):
-                    excavator.frame = adapter.encoder["frame"]["angle"]
-                else:
-                    if adapter.encoder["frame"]["angle"] > frame_joint.upper_bound:
-                        excavator.frame = frame_joint.upper_bound
-                    else:
-                        excavator.frame = frame_joint.lower_bound
-
-                boom_joint = excavator.boom_joint
-                if boom_joint.iswithin_bounds(adapter.encoder["boom"]["angle"]):
-                    excavator.boom = adapter.encoder["boom"]["angle"]
-                else:
-                    if adapter.encoder["boom"]["angle"] > boom_joint.upper_bound:
-                        excavator.boom = boom_joint.upper_bound
-                    else:
-                        excavator.boom = boom_joint.lower_bound
-
-                arm_joint = excavator.arm_joint
-                if arm_joint.iswithin_bounds(adapter.encoder["arm"]["angle"]):
-                    excavator.arm = adapter.encoder["arm"]["angle"]
-                else:
-                    if adapter.encoder["arm"]["angle"] > arm_joint.upper_bound:
-                        excavator.arm = arm_joint.upper_bound
-                    else:
-                        excavator.arm = arm_joint.lower_bound
-
-                attachment_joint = excavator.attachment_joint
-                if attachment_joint.iswithin_bounds(
+                excavator.frame = excavator.frame_joint.clip(
+                    adapter.encoder["frame"]["angle"]
+                )
+                excavator.boom = excavator.boom_joint.clip(
+                    adapter.encoder["boom"]["angle"]
+                )
+                excavator.arm = excavator.arm_joint.clip(
+                    adapter.encoder["arm"]["angle"]
+                )
+                excavator.attachment = excavator.attachment_joint.clip(
                     adapter.encoder["attachment"]["angle"]
-                ):
-                    excavator.attachment = adapter.encoder["attachment"]["angle"]
-                else:
-                    if (
-                        adapter.encoder["attachment"]["angle"]
-                        > attachment_joint.upper_bound
-                    ):
-                        excavator.attachment = attachment_joint.upper_bound
-                    else:
-                        excavator.attachment = attachment_joint.lower_bound
+                )
 
             if adapter.status == adapter.ConnectionState.DISCONNECTED:
                 adapter.restart()
