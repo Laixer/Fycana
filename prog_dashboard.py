@@ -222,9 +222,9 @@ class OriginGrid:
         grid.add_column("Pitch", justify="right", width=20)
         grid.add_column("Yaw", justify="right", width=20)
 
-        for joint in excavator.joints:
+        for idx, joint in enumerate(excavator.joints):
             grid.add_row(
-                joint.name,
+                (" " * idx) + joint.name,
                 format_coord(joint.origin_translation[0])
                 if joint.origin_translation is not None
                 else "-",
@@ -266,7 +266,7 @@ class KinematicGrid:
         for idx, joint in enumerate(excavator.joints):
             effector = excavator.forward_kinematics(joint_name=joint.name)
             grid.add_row(
-                joint.name,
+                (" " * idx) + joint.name,
                 format_coord(effector[0]),
                 format_coord(effector[1]),
                 format_coord(effector[2]),
@@ -277,7 +277,7 @@ class KinematicGrid:
 
         grid.add_row()
 
-        effector = excavator.forward_kinematics()
+        effector = excavator.forward_kinematics(joint_name="attachment_joint")
         grid.add_row(
             "Effector point",
             "{:>.2f}".format(effector[0]),
@@ -308,7 +308,7 @@ layout["origin"].update(
     )
 )
 layout["effector"].update(
-    Panel(KinematicGrid(), title="[magenta3][ Effector AGL ]", style="on grey15")
+    Panel(KinematicGrid(), title="[magenta3][ Effector ]", style="on grey15")
 )
 
 
