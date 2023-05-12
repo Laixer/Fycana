@@ -18,8 +18,6 @@ print(excavator)
 # sys.exit(0)
 
 adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
-# adapter.stop()
-# adapter.idle()
 
 # excavator.plot_robot()
 
@@ -34,6 +32,7 @@ print("Machine initialized")
 excavator.frame = adapter.encoder["frame"]["angle"]
 excavator.boom = adapter.encoder["boom"]["angle"]
 excavator.arm = adapter.encoder["arm"]["angle"]
+excavator.attachment = adapter.encoder["attachment"]["angle"]
 
 effector = excavator.forward_kinematics()
 print("End effector:", effector)
@@ -45,7 +44,9 @@ print("End effector:", effector)
 
 print("Program:", program)
 
+# adapter.stop()
 # sys.exit(0)
+
 print("Starting program")
 
 for target in program:
@@ -80,3 +81,5 @@ for target in program:
         print("")
 
         time.sleep(0.5)
+
+adapter.stop()
