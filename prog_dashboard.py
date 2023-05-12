@@ -74,12 +74,14 @@ def make_layout() -> Layout:
         Layout(name="footer", size=3),
     )
     layout["main"].split_row(
-        Layout(name="side", ratio=3), Layout(name="body", ratio=5, minimum_size=50)
+        Layout(name="side"), Layout(name="body", ratio=3, minimum_size=50)
     )
-    layout["side"].split(Layout(name="telemetric"), Layout(name="box2"))
-    layout["telemetric"].split_row(Layout(name="engine"), Layout(name="vms"))
-    layout["body"].split(Layout(name="woei"), Layout(name="encoder"))
-    layout["woei"].split_row(Layout(name="trans"), Layout(name="or"))
+    layout["side"].split(
+        Layout(name="engine"), Layout(name="vms"), Layout(name="location")
+    )
+    layout["body"].split(
+        Layout(name="encoder"), Layout(name="origin"), Layout(name="effector")
+    )
 
     return layout
 
@@ -155,9 +157,9 @@ class VMSPanel:
         grid = Table.grid(expand=True)
 
         grid.add_column(ratio=1)
-        grid.add_column(justify="right")
-        grid.add_column(justify="right")
-        grid.add_column(justify="right")
+        grid.add_column(justify="right", width=5)
+        grid.add_column(justify="right", width=5)
+        grid.add_column(justify="right", width=5)
 
         if "cpu_1" in adapter.vms:
             grid.add_row(
@@ -208,7 +210,7 @@ class EncoderTable:
         return table
 
 
-class OriginTranslationGrid:
+class OriginGrid:
     def __rich__(self) -> Table:
         grid = Table(box=None, pad_edge=False, show_edge=False, expand=True)
 
@@ -216,42 +218,33 @@ class OriginTranslationGrid:
         grid.add_column("X", justify="right", width=5)
         grid.add_column("Y", justify="right", width=5)
         grid.add_column("Z", justify="right", width=5)
+        grid.add_column("Roll", justify="right", width=20)
+        grid.add_column("Pitch", justify="right", width=20)
+        grid.add_column("Yaw", justify="right", width=20)
 
         for joint in excavator.joints:
-            if joint.origin_translation is not None:
-                grid.add_row(
-                    f"{joint.name}",
-                    "{:>.2f}".format(joint.origin_translation[0]),
-                    "{:>.2f}".format(joint.origin_translation[1]),
-                    "{:>.2f}".format(joint.origin_translation[2]),
-                    style="grey62",
-                )
-            else:
-                grid.add_row(f"{joint.name}", "-", "-", "-", style="grey62")
-
-        return grid
-
-
-class OriginOrientationGrid:
-    def __rich__(self) -> Table:
-        grid = Table(box=None, pad_edge=False, show_edge=False, expand=True)
-
-        grid.add_column()
-        grid.add_column("Roll", justify="right", width=5)
-        grid.add_column("Pitch", justify="right", width=5)
-        grid.add_column("Yaw", justify="right", width=5)
-
-        for joint in excavator.joints:
-            if joint.origin_orientation is not None:
-                grid.add_row(
-                    f"{joint.name}",
-                    "{:>.2f}".format(joint.origin_orientation[0]),
-                    "{:>.2f}".format(joint.origin_orientation[1]),
-                    "{:>.2f}".format(joint.origin_orientation[2]),
-                    style="grey62",
-                )
-            else:
-                grid.add_row(f"{joint.name}", "-", "-", "-", style="grey62")
+            grid.add_row(
+                joint.name,
+                format_coord(joint.origin_translation[0])
+                if joint.origin_translation is not None
+                else "-",
+                format_coord(joint.origin_translation[1])
+                if joint.origin_translation is not None
+                else "-",
+                format_coord(joint.origin_translation[2])
+                if joint.origin_translation is not None
+                else "-",
+                format_angle(joint.origin_orientation[0])
+                if joint.origin_orientation is not None
+                else "-",
+                format_angle(joint.origin_orientation[1])
+                if joint.origin_orientation is not None
+                else "-",
+                format_angle(joint.origin_orientation[2])
+                if joint.origin_orientation is not None
+                else "-",
+                style="bold" if joint.type != "fixed" else "",
+            )
 
         return grid
 
@@ -264,7 +257,9 @@ class KinematicGrid:
         grid.add_column("X", justify="right", width=5)
         grid.add_column("Y", justify="right", width=5)
         grid.add_column("Z", justify="right", width=5)
-        grid.add_column("Cumulative Angle", justify="right", width=20)
+        grid.add_column("Absolute Roll", justify="right", width=20)
+        grid.add_column("Absolute Pitch", justify="right", width=20)
+        grid.add_column("Absolute Yaw", justify="right", width=20)
 
         import numpy as np
 
@@ -272,12 +267,15 @@ class KinematicGrid:
             effector = excavator.forward_kinematics(joint_name=joint.name)
             grid.add_row(
                 joint.name,
-                "{:>.2f}".format(effector[0]),
-                "{:>.2f}".format(effector[1]),
-                "{:>.2f}".format(effector[2]),
+                format_coord(effector[0]),
+                format_coord(effector[1]),
+                format_coord(effector[2]),
+                "-",
                 format_angle(np.sum(excavator.position_state[0][2 : idx + 1])),
-                style="grey62",
+                format_angle(np.sum(excavator.position_state[0][1])),
             )
+
+        grid.add_row()
 
         effector = excavator.forward_kinematics()
         grid.add_row(
@@ -285,7 +283,9 @@ class KinematicGrid:
             "{:>.2f}".format(effector[0]),
             "{:>.2f}".format(effector[1]),
             "{:>.2f}".format(effector[2]),
+            "-",
             format_angle(np.sum(excavator.position_state[0][2:])),
+            format_angle(np.sum(excavator.position_state[0][1])),
             style="bold bright_yellow",
         )
 
@@ -300,21 +300,14 @@ layout["encoder"].update(
 layout["engine"].update(EnginePanel())
 layout["vms"].update(VMSPanel())
 layout["footer"].update(Footer())
-layout["trans"].update(
+layout["origin"].update(
     Panel(
-        OriginTranslationGrid(),
-        title="[magenta3][ Origin Translation ]",
-        style="on grey11",
+        OriginGrid(),
+        title="[magenta3][ Origin ]",
+        style="on grey15",
     )
 )
-layout["or"].update(
-    Panel(
-        OriginOrientationGrid(),
-        title="[magenta3][ Origin Orientation ]",
-        style="on grey11",
-    )
-)
-layout["box2"].update(
+layout["effector"].update(
     Panel(KinematicGrid(), title="[magenta3][ Effector AGL ]", style="on grey15")
 )
 
