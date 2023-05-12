@@ -77,7 +77,7 @@ excavator.attachment = adapter.encoder["attachment"]["angle"]
 
 ### Kinematics test
 
-program = np.array([[7.73, 0.00, 2.29], [5.35, 0.00, 1.93]])
+program = np.array([[7.73, 0.00, 2.29], [5.35, 0.00, 1.93], [0.00, 7.73, 2.29]])
 
 print("Program:", program)
 
@@ -102,14 +102,14 @@ for target in program:
 
         print()
         error = excavator.get_position_error()[0]
-        print("Relative error:", error)
+        print("Relative error:", error[1:4])
 
         power_setting_slew = motion_profile_slew.proportional_power(error[1])
         print("Power setting Slew:", int(power_setting_slew))
         power_setting_boom = motion_profile_boom.proportional_power(error[2])
         print("Power setting Boom:", int(power_setting_boom))
         power_setting_arm = motion_profile_arm.proportional_power(error[3])
-        print("Power setting:", int(power_setting_arm))
+        print("Power setting Arm:", int(power_setting_arm))
 
         adapter.change(
             [
