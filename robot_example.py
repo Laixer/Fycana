@@ -39,11 +39,12 @@ class MotionProfile:
         else:
             return 0
 
+tolerance = 0.005
 
-motion_profile_slew = MotionProfile(10_000, 12_000, 0.02, False)
-motion_profile_boom = MotionProfile(15_000, 12_000, 0.02, True)
-motion_profile_arm = MotionProfile(15_000, 12_000, 0.02, False)
-motion_profile_attachment = MotionProfile(15_000, 12_000, 0.02, False)
+motion_profile_slew = MotionProfile(10_000, 12_000, tolerance, False)
+motion_profile_boom = MotionProfile(15_000, 12_000, tolerance, True)
+motion_profile_arm = MotionProfile(15_000, 12_000, tolerance, False)
+motion_profile_attachment = MotionProfile(15_000, 12_000, tolerance, False)
 
 # program = np.load(file="model/default_trainnig_v1.npy")
 excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
@@ -119,7 +120,7 @@ for target in program:
             ]
         )
 
-        if excavator.is_objective_reached(tolerance=0.02):
+        if excavator.is_objective_reached(tolerance):
             print("Objective reached")
             input("Press Enter to continue...")
             break
