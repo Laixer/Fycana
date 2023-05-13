@@ -73,19 +73,38 @@ excavator.attachment = adapter.encoder["attachment"]["angle"]
 # effector = excavator.forward_kinematics(joint_name="attachment_joint")
 # print("End effector:", effector)
 
+# adapter.disable_motion()
 # adapter.stop()
 # sys.exit(0)
 
 ### Kinematics test
 
-program = np.array([[7.73, 0.00, 2.29], [5.35, 0.00, 1.93], [0.00, 7.73, 2.29]])
+program = np.array(
+    [
+        [5.56, 0.00, 1.65],
+        # begin loop
+        [6.27, 0.00, 3.58],
+        [7.63, 0.00, 4.45],
+        [8.05, 0.00, 2.19],
+        [7.14, 0.00, 1.44],
+        [5.85, 0.00, 1.85],
+        [3.55, 4.60, 2.58],
+        [4.85, 6.26, 1.96],
+        # begin loop
+        [6.27, 0.00, 3.58],
+        # [5.22, 6.60, 2.05],
+        # [5.95, 0.00, 1.29],
+    ]
+)
 
 print("Program:", program)
 
+# adapter.disable_motion()
 # adapter.stop()
 # sys.exit(0)
 
 print("Starting program")
+input("Press Enter to continue...")
 
 for target in program:
     effector = excavator.forward_kinematics(joint_name="attachment_joint")
@@ -122,13 +141,14 @@ for target in program:
 
         if excavator.is_objective_reached(tolerance):
             print("Objective reached")
-            input("Press Enter to continue...")
+            # input("Press Enter to continue...")
             break
         else:
             print("Objective not reached")
 
         time.sleep(0.1)
 
+adapter.disable_motion()
 adapter.stop()
 sys.exit(0)
 
@@ -178,5 +198,6 @@ while True:
 
     time.sleep(0.1)
 
+adapter.disable_motion()
 adapter.stop()
 sys.exit(0)
