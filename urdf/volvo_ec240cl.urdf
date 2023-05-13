@@ -114,7 +114,7 @@
         <axis xyz="0 1 0"/>
         <!-- FUTURE: -->
         <!-- <limit effort="1000.0" lower="0" upper="2.094" velocity="0.5"/> -->
-        <limit effort="1000.0" lower="0.685" upper="2.76" velocity="0.5"/>
+        <limit effort="1000.0" lower="0.68" upper="2.76" velocity="0.5"/>
     </joint>
 
     <link name="arm">
@@ -141,7 +141,7 @@
         <child link="attachment"/>
         <origin xyz="2.97 0 0"/>
         <axis xyz="0 1 0"/>
-        <limit effort="1000.0" lower="-0.962" upper="2.138" velocity="0.5"/>
+        <limit effort="1000.0" lower="-0.962" upper="2.19" velocity="0.5"/>
     </joint>
 
     <link name="attachment">
