@@ -242,7 +242,9 @@ class Robot:
         return np.vstack((self.position_state, self.get_position_error()))
 
     def is_objective_reached(self, tolerance=0.005):
-        return np.allclose(self.get_position_error(), 0.0, atol=tolerance)
+        return np.allclose(
+            self.get_position_error()[0][1:4], 0.0, atol=tolerance
+        )  # TODO: Remove 0:1:4
 
     def _axis_aligned_reach(self) -> np.ndarray:
         frame = self._forward_kinematics_frame([0, 0, 0, 0, 0])

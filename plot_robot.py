@@ -56,7 +56,7 @@ def animate(i):
     ax.plot(x, y, z, "ro-")
 
 
-ani = animation.FuncAnimation(fig, animate, interval=100)
+ani = animation.FuncAnimation(fig, animate, interval=50)
 plt.show()
 
 adapter.stop()
