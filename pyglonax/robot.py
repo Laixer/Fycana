@@ -1,6 +1,7 @@
 import numpy as np
 import networkx as nx
 import scipy as sp
+from scipy import optimize
 
 from xml.etree import ElementTree as ET
 
@@ -319,10 +320,9 @@ class Robot:
 
             return target_error
 
-        res = sp.optimize.least_squares(
+        res = optimize.least_squares(
             optimize_function, self.position_state[0], bounds=(lb, ub)
         )
-        # print(res)
         if not res.success:
             raise ValueError("Could not find inverse kinematics solution")
 
