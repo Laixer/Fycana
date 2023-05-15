@@ -6,6 +6,7 @@ import numpy as np
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter, ExcavatorActuator
 from pyglonax.util import get_config
+from pyglonax.alg import shortest_rotation
 
 config = get_config()
 
@@ -94,8 +95,6 @@ program = np.array(
         [4.85, 6.26, 1.96, -0.192],
         # begin loop
         [6.27, 0.00, 3.58, 0.2792],
-        # [5.22, 6.60, 2.05],
-        # [5.95, 0.00, 1.29],
     ]
 )
 
@@ -153,7 +152,10 @@ def move_to_target(target):
         rel_error = rel_angle - excavator.attachment
         print("Relative Pitch error: {:.3f}".format(rel_error))
 
-        power_setting_slew = motion_profile_slew.proportional_power(error[1])
+        error_slew = shortest_rotation(error[1])
+        print("Slew error:", error_slew)
+
+        power_setting_slew = motion_profile_slew.proportional_power(error_slew)
         print("Power setting Slew:", int(power_setting_slew))
         power_setting_boom = motion_profile_boom.proportional_power(error[2])
         print("Power setting Boom:", int(power_setting_boom))
