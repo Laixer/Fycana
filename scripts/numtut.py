@@ -19,11 +19,15 @@ np.set_printoptions(formatter={"float": lambda x: "{0:0.2f}".format(x)})
 # print(norm)
 
 
-bounds = (-0.96, 2.14)
+# bounds = (-0.96, 2.14)
 
-value = -824
-q = np.clip(value, -np.inf, bounds[1])
-print(q)
+# value = -824
+# q = np.clip(value, -np.inf, bounds[1])
+# print(q)
+
+q = np.array([[1, 2, 3, 7], [4, 5, 6, 7], [7, 8, 9, 7]])
+
+print(q[1:3])
 
 sys.exit()
 # print(m.dtype)
