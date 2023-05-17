@@ -1,6 +1,9 @@
+#!/usr/bin/env python3
+
 import os
 import sys
 import time
+import json
 import traceback
 import numpy as np
 
@@ -68,19 +71,9 @@ motion_profile_boom = MotionProfile(15_000, 12_000, tolerance, True)
 motion_profile_arm = MotionProfile(15_000, 12_000, tolerance, False)
 motion_profile_attachment = MotionProfile(15_000, 12_000, tolerance, False)
 
-# program = np.load(file="model/default_trainnig_v1.npy")
 excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
 
-print(excavator)
-
-# sys.exit(0)
-
 adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
-
-# excavator.plot_robot()
-
-# for x in adapter.body.edges(data=True):
-# print(x)
 
 adapter.start()
 adapter.wait_until_initialized()
@@ -92,72 +85,13 @@ excavator.boom = adapter.encoder["boom"]["angle"]
 excavator.arm = adapter.encoder["arm"]["angle"]
 excavator.attachment = adapter.encoder["attachment"]["angle"]
 
-# effector = excavator.forward_kinematics2(joint_name="attachment_joint")
-# print("End effector:", format_euler_tuple(effector))
-
-# adapter.disable_motion()
-# adapter.stop()
-# sys.exit(0)
-
-### Kinematics test
-
-
-program = np.array(
-    [
-        [5.56, 0.00, 1.65, 0.00, 2.3911, 0.00],
-        # begin loop
-        [6.27, 0.00, 3.58, 0.00, 0.2792, 0.00],
-        [7.63, 0.00, 4.45, 0.00, 0.4363, 0.00],
-        [8.05, 0.00, 2.19, 0.00, 0.7330, 0.00],
-        [7.14, 0.00, 1.44, 0.00, 2.2340, 0.00],
-        [5.85, 0.00, 1.85, 0.00, 3.1415, 0.00],
-        [3.55, 4.60, 2.58, 0.00, 3.0019, 0.00],
-        [4.85, 6.26, 1.96, 0.00, -0.192, 0.00],
-        # begin loop
-        [6.27, 0.00, 3.58, 0.00, 0.2792, 0.00],
-    ]
-)
-
-# program = np.array(
-#     [
-#         [5.56, 0.00, 1.65, 0.00, 2.39, 0.00],
-#         # begin loop
-#         [6.27, 0.00, 3.58, 0.00, 0.28, 0.00],
-#         [7.63, 0.00, 4.45, 0.00, 0.45, 0.00],
-#         [8.05, 0.00, 2.19, 0.00, 0.73, 0.00],
-#         [7.14, 0.00, 1.44, 0.00, 2.23, 0.00],
-#         [5.85, 0.00, 1.85, 0.00, 3.14, 0.00],
-#         [3.55, 0.00, 2.58, 0.00, 3.00, 0.00],
-#         [4.85, 6.26, 1.96, 0.00, -0.19, 0.00],
-#         [5.79, 0.43, 1.55, 0.00, 2.14, 0.00],
-#         [7.68, 0.57, 4.38, 0.00, 1.03, 0.00],
-#         [8.53, 0.70, 1.81, 0.00, 0.59, 0.00],
-#         [7.06, 0.57, 1.34, 0.00, 2.47, 0.00],
-#         [3.93, 0.33, 2.45, 0.00, 3.10, 0.00],
-#         [2.44, 3.09, 2.45, 0.00, 3.10, 0.00],
-#         [4.78, 6.05, 3.53, 0.00, 2.67, 0.00],
-#         [5.32, 6.71, 2.24, 0.00, 0.68, 0.00],
-#         [3.63, 4.56, 2.37, 0.00, 2.97, 0.00],
-#         [4.69, 5.49, 1.62, 0.00, 0.63, 0.00],
-#         [0.10, 4.89, 2.63, 0.00, 2.12, 0.00],
-#         [0.10, 5.58, 1.35, 0.00, 2.16, 0.00],
-#         [5.39, 0.31, 3.40, 0.00, 1.80, 0.00],
-#         [7.95, 0.47, 2.22, 0.00, 0.86, 0.00],
-#         [3.95, 0.24, 2.05, 0.00, 3.03, 0.00],
-#         [0.65, 3.90, 2.05, 0.00, 3.03, 0.00],
-#         [3.84, 4.69, 2.18, 0.00, 2.60, 0.00],
-#         # end loop
-#         [5.56, 0.00, 1.65, 0.00, 2.39, 0.00],
-#     ]
-# )
+json_file = json.load(open("model/extended_training.json"))
+program = np.array(json_file)
 
 print("Program:")
 for idx, target in enumerate(program):
     print(f"{idx}", format_euler_tuple(target))
 
-# adapter.disable_motion()
-# adapter.stop()
-# sys.exit(0)
 
 print()
 print("Starting program")
