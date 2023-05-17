@@ -215,7 +215,7 @@ class Robot:
         raise ValueError("Joint not found")
 
     def reset_position_state(self):
-        """Reset joint positions to 0 or lower bound if lower bound is not infinite"""
+        """Reset joint positions to default"""
         self.position_state = np.tile(
             [joint.default() for joint in self.joints],
             (self.position_state.shape[0], 1),
@@ -238,6 +238,7 @@ class Robot:
     def get_position_error(self):
         return np.diff(self.position_state, axis=0)
 
+    # TODO: Maybe remove?
     def get_position_state_full(self):
         return np.vstack((self.position_state, self.get_position_error()))
 
