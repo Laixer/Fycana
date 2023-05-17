@@ -81,6 +81,7 @@ class Robot:
         self.model = model
         self.links = list()  # TODO: Replace with graph
         self.joints = list()  # TODO: Replace with graph
+        self.joint_mask = np.array([])
         self.position_state = np.zeros((2, 0))
         self.body = nx.DiGraph()
 
@@ -88,11 +89,17 @@ class Robot:
         """Add a joint to the robot"""
         self.joints.append(joint)
 
+        # TODO: Rather go with .append()
         # Update the position state with an new column for the joint
         self.position_state = np.c_[
             self.position_state,
             np.full((self.position_state.shape[0], 1), joint.default()),
         ]
+        # self.joint_mask = np.append(
+        #     self.joint_mask, np.full((self.joint_mask.shape[0], 1), 14), axis=1
+        # )
+        default_mask = 1
+        self.joint_mask = np.append(self.joint_mask, [default_mask], axis=0)
 
         if parent is not None and child is not None:
             self.body.add_edge(parent, child, joint=joint)
@@ -235,6 +242,21 @@ class Robot:
             raise ValueError(f"Value {value} is out of bounds for joint {name}")
         self.position_state[dim][idx] = value
 
+    def get_position_state_actual(self):
+        return self.position_state[0]
+
+    def get_position_state_actual_with_mask(self):
+        col_offset = []
+        for idx, mask in enumerate(self.joint_mask):
+            if mask == 1:
+                col_offset.append(idx)
+
+        return self.position_state[:, col_offset]
+
+    def get_position_state_projected(self):
+        return self.position_state[1]
+
+    # TODO: Return the first demension
     def get_position_error(self):
         return np.diff(self.position_state, axis=0)
 
@@ -242,30 +264,87 @@ class Robot:
     def get_position_state_full(self):
         return np.vstack((self.position_state, self.get_position_error()))
 
+    # TODO: Maybe remove?
     def is_objective_reached(self, tolerance=0.005):
         return np.allclose(
             self.get_position_error()[0][1:4], 0.0, atol=tolerance
         )  # TODO: Remove 0:1:4
 
-    def _axis_aligned_reach(self) -> np.ndarray:
-        frame = self._forward_kinematics_frame([0, 0, 0, 0, 0])
-        return frame[:1, 3][0]
+    # def forward_orientation(self):
+    #     joint_rotation = np.array([0, 0, 0])
+    #     frame = np.empty((0, 3))
+    #     for joint, joint_parameter in zip(
+    #         self.joints, self.get_position_state_actual()
+    #     ):
+    #         joint_joint = np.array([0, 0, 0])
+    #         if joint.origin_orientation is not None:
+    #             joint_joint = joint.origin_orientation
+    #         if joint.rotation is not None:
+    #             rotation = joint.rotation * joint_parameter
+    #             joint_joint = joint_joint + rotation
+    #         joint_rotation = joint_rotation + joint_joint
+    #         frame = np.append(frame, np.array([joint_rotation]), axis=0)
 
-    def is_within_reach(self, point: np.ndarray) -> bool:
-        """
-        Check if a point is within the reach of the robot
+    #     return frame
 
-        NOTE: This is a very simple check that only checks if the point is within the axis-aligned reach of the robot.
+    def _calculate_forward_kinematics(self, joint_parameters, joint_name=None):
+        if len(self.joints) != len(joint_parameters):
+            raise ValueError(
+                f"joint_parameters has length {len(joint_parameters)} but robot has {len(self.joints)} joints"
+            )
 
-        :param point: Point to check
-        """
-        if point.size != 3:
-            raise ValueError(f"point has size {point.size} but should be 3")
-        norm = np.linalg.norm(point)
-        return norm <= self._axis_aligned_reach()
+        euler_matrix = np.identity(4)
+        rotation_matrix = np.array([0, 0, 0])
+        frame_cumulative = np.empty((0, 6))
+        for joint, joint_parameter in zip(self.joints, joint_parameters):
+            joint_rotation = np.array([0, 0, 0])
+            if joint.origin_translation is not None:
+                euler_matrix = euler_matrix.dot(
+                    geom.Geometry.translation_matrix(*joint.origin_translation)
+                )
+            if joint.origin_orientation is not None:
+                euler_matrix = euler_matrix.dot(
+                    geom.Geometry.rotation_matrix(*joint.origin_orientation[1:])
+                )
+                joint_rotation = joint.origin_orientation
+            if joint.rotation is not None:
+                rotation = joint.rotation * joint_parameter
+                euler_matrix = euler_matrix.dot(
+                    geom.Geometry.rotation_matrix(*rotation[1:])
+                )
+                joint_rotation = joint_rotation + rotation
+            if joint.translation is not None:
+                translation = joint.translation * joint_parameter
+                euler_matrix = euler_matrix.dot(
+                    geom.Geometry.translation_matrix(*translation)
+                )
 
+            rotation_matrix = rotation_matrix + joint_rotation
+            coord_rot = np.concatenate((euler_matrix[:3, 3], rotation_matrix), axis=0)
+            frame_cumulative = np.append(
+                frame_cumulative, np.array([coord_rot]), axis=0
+            )
+
+            if joint_name is not None and joint.name == joint_name:
+                break
+
+        return frame_cumulative
+
+    def forward_kinematics2(self, joint_name=None) -> np.ndarray:
+        frame = self._calculate_forward_kinematics(
+            self.get_position_state_actual(), joint_name
+        )
+
+        if joint_name is not None:
+            return frame[-1]
+
+        return frame
+
+    # TODO: Return 1x6 matrix
     def forward_kinematics(self, joint_name=None) -> np.ndarray:
-        frame = self._forward_kinematics_frame(self.position_state[0], joint_name)
+        frame = self._forward_kinematics_frame(
+            self.get_position_state_actual(), joint_name
+        )
         return frame[:3, 3]
 
     def _forward_kinematics_frame(
@@ -316,15 +395,18 @@ class Robot:
         ub = [joint.upper_bound for joint in self.joints]
 
         def optimize_function(x):
-            frame = self._forward_kinematics_frame(x, joint_name="attachment_joint")
-            fk = frame[:3, 3]
+            # frame = self._forward_kinematics_frame(x, joint_name="attachment_joint")
+            # fk = frame[:3, 3]
+
+            frame = self._calculate_forward_kinematics(x, joint_name="attachment_joint")
+            fk = frame[-1][:3]
 
             target_error = fk - target
 
             return target_error
 
         res = optimize.least_squares(
-            optimize_function, self.position_state[0], bounds=(lb, ub)
+            optimize_function, self.get_position_state_actual(), bounds=(lb, ub)
         )
         if not res.success:
             raise ValueError("Could not find inverse kinematics solution")
@@ -344,10 +426,10 @@ class Robot:
         for joint in self.joints:
             s += f"\n  {joint}"
         s += "\n"
-        s += f"EndEffector={util.numpy3d_to_string(self.forward_kinematics())}\n"
+        s += f"EndEffectorVector={util.numpy3d_to_string(self.forward_kinematics2(joint_name='attachment_joint')[:3])}, EndEffectorOrientation={util.numpy3d_to_string(self.forward_kinematics2(joint_name='attachment_joint')[3:])}\n"
         s += f"ObjectiveReached={self.is_objective_reached()}\n"
         for idx, joint in enumerate(self.joints):
-            s += f"  Joint={joint.name}, Actual={np.rad2deg(position_state[idx][0]):.2f}°, Desired={np.rad2deg(position_state[idx][1]):.2f}°, Error={np.rad2deg(position_state[idx][2]):.2f}°\n"
+            s += f"  Joint={joint.name}, Actual={np.rad2deg(position_state[idx][0]):.2f}°, Projected={np.rad2deg(position_state[idx][1]):.2f}°, Error={np.rad2deg(position_state[idx][2]):.2f}°\n"
         return s
 
     # TODO: Move to util
