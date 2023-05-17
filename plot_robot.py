@@ -3,6 +3,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import numpy as np
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter
 from pyglonax.util import get_config
@@ -33,8 +34,7 @@ def animate(i):
     y = [0]
     z = [0]
 
-    for joint in excavator.joints:
-        effector = excavator.forward_kinematics(joint_name=joint.name)
+    for effector in excavator.forward_kinematics2():
         x.append(effector[0])
         y.append(effector[1])
         z.append(effector[2])
@@ -43,7 +43,14 @@ def animate(i):
             effector[0],
             effector[1],
             effector[2],
-            "({:.2f}, {:.2f}, {:.2f})".format(effector[0], effector[1], effector[2]),
+            "({:.2f}, {:.2f}, {:.2f}) [{:.2f}, {:.2f}, {:.2f}]".format(
+                effector[0],
+                effector[1],
+                effector[2],
+                np.rad2deg(effector[3]),
+                np.rad2deg(effector[4]),
+                np.rad2deg(effector[5]),
+            ),
         ),
 
     ax.set_xlim(-10, 10)

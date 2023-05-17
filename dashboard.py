@@ -263,29 +263,29 @@ class KinematicGrid:
 
         import numpy as np
 
+        effector = excavator.forward_kinematics2()
         for idx, joint in enumerate(excavator.joints):
-            effector = excavator.forward_kinematics(joint_name=joint.name)
             grid.add_row(
                 (" " * idx) + joint.name,
-                format_coord(effector[0]),
-                format_coord(effector[1]),
-                format_coord(effector[2]),
-                "-",
-                format_angle(np.sum(excavator.position_state[0][2 : idx + 1])),
-                format_angle(np.sum(excavator.position_state[0][1])),
+                format_coord(effector[idx][0]),
+                format_coord(effector[idx][1]),
+                format_coord(effector[idx][2]),
+                format_angle(effector[idx][3]),
+                format_angle(effector[idx][4]),
+                format_angle(effector[idx][5]),
             )
 
         grid.add_row()
 
-        effector = excavator.forward_kinematics(joint_name="attachment_joint")
+        effector = excavator.forward_kinematics2(joint_name="attachment_joint")
         grid.add_row(
             "Effector point",
-            "{:>.2f}".format(effector[0]),
-            "{:>.2f}".format(effector[1]),
-            "{:>.2f}".format(effector[2]),
-            "-",
-            format_angle(np.sum(excavator.position_state[0][2:])),
-            format_angle(np.sum(excavator.position_state[0][1])),
+            format_coord(effector[0]),
+            format_coord(effector[1]),
+            format_coord(effector[2]),
+            format_angle(effector[3]),
+            format_angle(effector[4]),
+            format_angle(effector[5]),
             style="bold bright_yellow",
         )
 
@@ -308,7 +308,7 @@ layout["origin"].update(
     )
 )
 layout["effector"].update(
-    Panel(KinematicGrid(), title="[magenta3][ Effector ]", style="on grey15")
+    Panel(KinematicGrid(), title="[magenta3][ Kinematics ]", style="on grey15")
 )
 
 
