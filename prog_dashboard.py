@@ -29,7 +29,7 @@ def format_angle(value=None) -> Text:
         text.append("inf", style="bright_black")
         return text
 
-    text.append("{:7.2f}".format(value), style="chartreuse2")
+    text.append("{:8.3f}".format(value), style="chartreuse2")
     text.append("rad", style="bright_black")
     text.append(" ")
     text.append("{:7.2f}".format(math.degrees(value)), style="yellow1")
