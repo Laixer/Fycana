@@ -85,7 +85,7 @@ excavator.boom = adapter.encoder["boom"]["angle"]
 excavator.arm = adapter.encoder["arm"]["angle"]
 excavator.attachment = adapter.encoder["attachment"]["angle"]
 
-json_file = json.load(open("model/extended_training.json"))
+json_file = json.load(open("model/default_training.json"))
 program = np.array(json_file)
 
 print("Program:")
