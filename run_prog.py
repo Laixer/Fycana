@@ -49,6 +49,10 @@ def format_angle(value):
     return "{:.2f}°".format(np.rad2deg(value))
 
 
+def format_angle_both(value):
+    return "{:.3f}  {:.2f}°".format(value, np.rad2deg(value))
+
+
 def format_coord(value):
     return "{:.2f}".format(value)
 
@@ -108,11 +112,11 @@ def move_to_target(target):
     excavator.inverse_kinematics(target[:3])
 
     proj_angle = np.sum(excavator.get_position_state_projected()[2:])
-    print("IK: Projected Pitch:", format_angle(proj_angle))
+    print("IK: Projected Pitch:", format_angle_both(proj_angle))
     abs_error = target[4] - proj_angle
-    print("IK: AbsPitch error:", format_angle(abs_error))
+    print("IK: AbsPitch error:", format_angle_both(abs_error))
     rel_pitch_error0 = excavator.attachment + abs_error
-    print("IK: RelPitch error", format_angle(rel_pitch_error0))
+    print("IK: RelPitch error:", format_angle_both(rel_pitch_error0))
 
     bc = excavator.attachment_joint.is_within_bounds(rel_pitch_error0)
     print("IK: Is Within bounds:", bc)
@@ -150,22 +154,22 @@ def move_to_target(target):
 
         print(
             "{:<15}".format("Frame"),
-            "  Error: {:>7}".format(format_angle(rel_frame_error)),
+            "  Error: {:>15}".format(format_angle_both(rel_frame_error)),
             "  Power: {:>6d}".format(int(power_setting_slew)),
         )
         print(
             "{:<15}".format("Boom"),
-            "  Error: {:>7}".format(format_angle(rel_boom_error)),
+            "  Error: {:>15}".format(format_angle_both(rel_boom_error)),
             "  Power: {:>6d}".format(int(power_setting_boom)),
         )
         print(
             "{:<15}".format("Arm"),
-            "  Error: {:>7}".format(format_angle(rel_arm_error)),
+            "  Error: {:>15}".format(format_angle_both(rel_arm_error)),
             "  Power: {:>6d}".format(int(power_setting_arm)),
         )
         print(
             "{:<15}".format("Attachment"),
-            "  Error: {:>7}".format(format_angle(rel_attachment_error)),
+            "  Error: {:>15}".format(format_angle_both(rel_attachment_error)),
             "  Power: {:>6d}".format(int(power_setting)),
         )
 
