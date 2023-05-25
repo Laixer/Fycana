@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import json
+import time
 import traceback
 import numpy as np
 
@@ -25,7 +26,8 @@ class MotionProfile:
 
     def proportional_power(self, value):
         if abs(value) > self.lower_bound:
-            power = self.offset + min((abs(value) * self.scale), 32_767 - self.offset)
+            power = self.offset + \
+                min((abs(value) * self.scale), 32_767 - self.offset)
             if value < 0:
                 return -power
             else:
@@ -89,23 +91,26 @@ excavator.boom = adapter.encoder["boom"]["angle"]
 excavator.arm = adapter.encoder["arm"]["angle"]
 excavator.attachment = adapter.encoder["attachment"]["angle"]
 
-json_file = json.load(open("model/default_training.json"))
+json_file = json.load(open("model/data2.json"))
 program = np.array(json_file)
 
 print("Program:")
 for idx, target in enumerate(program):
     print(f"{idx}", format_euler_tuple(target))
 
+SUPERVISOR=False
 
 print()
 print("Starting program")
-input("Press Enter to continue...")
+if SUPERVISOR:
+    input("Press Enter to continue...")
 
 
 def move_to_target(target):
     effector = excavator.forward_kinematics2(joint_name="attachment_joint")
 
     print("")
+    print("Virtual projection:")
     print("Target   :", format_euler_tuple(target))
     print("Effector :", format_euler_tuple(effector))
 
@@ -127,7 +132,8 @@ def move_to_target(target):
     excavator.position_state[1][4] = rel_pitch_error0
 
     print()
-    input("Press Enter to continue...")
+    if SUPERVISOR:
+        input("Press Enter to continue...")
 
     while True:
         excavator.frame = adapter.encoder["frame"]["angle"]
@@ -145,9 +151,12 @@ def move_to_target(target):
         rel_arm_error = rel_error[3]
         rel_attachment_error = rel_error[4]
 
-        power_setting_slew = motion_profile_slew.proportional_power(rel_frame_error)
-        power_setting_boom = motion_profile_boom.proportional_power(rel_boom_error)
-        power_setting_arm = motion_profile_arm.proportional_power_inverse(rel_arm_error)
+        power_setting_slew = motion_profile_slew.proportional_power(
+            rel_frame_error)
+        power_setting_boom = motion_profile_boom.proportional_power(
+            rel_boom_error)
+        power_setting_arm = motion_profile_arm.proportional_power_inverse(
+            rel_arm_error)
         power_setting = motion_profile_attachment.proportional_power(
             rel_attachment_error
         )
@@ -190,7 +199,14 @@ def move_to_target(target):
         ):
             print()
             print("Objective reached")
-            input("Press Enter to continue...")
+            if SUPERVISOR:
+                time.sleep(0.75)
+            effector = excavator.forward_kinematics2(
+                joint_name="attachment_joint")
+            print("Target   :", format_euler_tuple(target))
+            print("Effector :", format_euler_tuple(effector))
+            if SUPERVISOR:
+                input("Press Enter to continue...")
             break
 
         time.sleep(0.1)
