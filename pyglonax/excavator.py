@@ -28,6 +28,7 @@ class ExcavatorAdapter(Adapter):
     encoder = {}
     engine = {}
     vms = {}
+    signal_callback = None
 
     def signal_event(self, signal):
         """
@@ -53,6 +54,9 @@ class ExcavatorAdapter(Adapter):
             case _:
                 logging.debug("Unknown signal: %s", signal)
 
+    def on_signal_update(self, func):
+        self.signal_callback = func
+
     def _on_host_metric(self, signal):
         if signal.function == 382:
             self.vms["memory"] = signal.percent
@@ -69,6 +73,8 @@ class ExcavatorAdapter(Adapter):
         if signal.function == 595:
             self.vms["cpu_15"] = signal.percent
             logging.debug(f"CPU 3: {signal.percent}%")
+        if self.signal_callback:
+            self.signal_callback(signal)
 
     def _on_engine_signal(self, signal):
         if signal.function == 0:
@@ -80,6 +86,8 @@ class ExcavatorAdapter(Adapter):
         if signal.function == 2:
             self.engine["actual_engine"] = signal.percent
             logging.debug(f"Actual engine: {signal.percent}%")
+        if self.signal_callback:
+            self.signal_callback(signal)
 
     def _on_frame_signal(self, signal):
         if "frame" not in self.encoder:
@@ -88,6 +96,8 @@ class ExcavatorAdapter(Adapter):
             self.encoder["frame"]["position"] = signal.angle
             self.encoder["frame"]["angle"] = signal.angle
             logging.debug(f"Frame position: {signal.angle:.3f}")
+        if self.signal_callback:
+            self.signal_callback(signal)
 
     def _on_boom_signal(self, signal):
         if "boom" not in self.encoder:
@@ -96,6 +106,8 @@ class ExcavatorAdapter(Adapter):
             self.encoder["boom"]["position"] = signal.angle
             self.encoder["boom"]["angle"] = signal.angle - 1.047
             logging.debug(f"Boom position: {signal.angle:.3f}")
+        if self.signal_callback:
+            self.signal_callback(signal)
 
     def _on_arm_signal(self, signal):
         if "arm" not in self.encoder:
@@ -104,6 +116,8 @@ class ExcavatorAdapter(Adapter):
             self.encoder["arm"]["position"] = signal.angle
             self.encoder["arm"]["angle"] = signal.angle
             logging.debug(f"Arm position: {signal.angle:.3f}")
+        if self.signal_callback:
+            self.signal_callback(signal)
 
     def _on_attachment_signal(self, signal):
         if "attachment" not in self.encoder:
@@ -112,6 +126,8 @@ class ExcavatorAdapter(Adapter):
             self.encoder["attachment"]["position"] = signal.angle
             self.encoder["attachment"]["angle"] = signal.angle - 0.962
             logging.debug(f"Attachment position: {signal.angle:.3f}")
+        if self.signal_callback:
+            self.signal_callback(signal)
 
     def is_initialized(self):
         return (
