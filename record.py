@@ -9,29 +9,10 @@ import numpy as np
 
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter
-from pyglonax.util import get_config
-from pyglonax.alg import shortest_rotation
+from pyglonax.util import get_config, format_euler_tuple
+
 
 config = get_config()
-
-
-def format_angle(value):
-    return "{:.2f}°".format(np.rad2deg(value))
-
-
-def format_coord(value):
-    return "{:.2f}".format(value)
-
-
-def format_euler_tuple(effector):
-    return "({}, {}, {}) [{}, {}, {}]".format(
-        format_coord(effector[0]),
-        format_coord(effector[1]),
-        format_coord(effector[2]),
-        format_angle(effector[3]),
-        format_angle(effector[4]),
-        format_angle(effector[5]),
-    )
 
 
 tolerance = float(config["ROBOT_KIN_TOL"])
