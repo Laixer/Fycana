@@ -16,7 +16,6 @@ from pyglonax.alg import shortest_rotation
 
 config = get_config()
 
-
 tolerance = float(config["ROBOT_KIN_TOL"])
 
 
@@ -69,7 +68,7 @@ class Executor:
 
         print()
         if self.supervisor:
-            input("Press Enter to continue...")
+            input("Press Enter to start...")
 
         trace_file = None
         trace_writer = None
@@ -92,8 +91,6 @@ class Executor:
 
         count = 0
         while True:
-            count += 1
-
             print()
             print(f"Iter: {count} Target:", format_euler_tuple(target))
 
@@ -173,7 +170,7 @@ class Executor:
                 print()
                 print("Objective reached")
                 if self.supervisor:
-                    time.sleep(0.75)
+                    time.sleep(1)
                 effector = self.excavator.forward_kinematics2(
                     joint_name="attachment_joint"
                 )
@@ -183,6 +180,7 @@ class Executor:
                     input("Press Enter to continue...")
                 break
 
+            count += 1
             time.sleep(0.05)
 
     def start(self, program):
@@ -190,6 +188,13 @@ class Executor:
         self.adapter.wait_until_initialized()
         self.adapter.enable_motion()
 
+        print("Absolute tolerance:", tolerance)
+        print("Motion profile slew:", 10_000, 12_000)
+        print("Motion profile boom:", 15_000, 12_000)
+        print("Motion profile arm:", 15_000, 12_000)
+        print("Motion profile attachment:", 15_000, 12_000)
+
+        print()
         print("Program:")
         for idx, target in enumerate(program):
             print(f"{idx}", format_euler_tuple(target))
@@ -208,8 +213,6 @@ if __name__ == "__main__":
     if len(args) < 1:
         print("Usage: python3 run_prog.py <program.json> [--no-supervisor]")
         sys.exit(1)
-
-    print("Loading model:", args[0])
 
     json_file = json.load(open(f"{args[0]}"))
     program = np.array(json_file)
