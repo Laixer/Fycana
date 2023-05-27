@@ -2,10 +2,8 @@
 
 import os
 import sys
-import time
-from threading import Thread, Event
 import json
-import numpy as np
+import traceback
 
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter
@@ -15,73 +13,70 @@ from pyglonax.util import get_config, format_euler_tuple
 config = get_config()
 
 
-tolerance = float(config["ROBOT_KIN_TOL"])
+class Recorder:
+    def __init__(self, definition_file, host):
+        self.excavator = Excavator.from_urdf(file_path=definition_file)
+        self.adapter = ExcavatorAdapter(host=host)
+        self.adapter.on_signal_update(self._update_signal)
+        self.program = []
 
-excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
-adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
+    def _update_signal(self, signal):
+        if "frame" in self.adapter.encoder:
+            self.excavator.frame = self.adapter.encoder["frame"]["angle"]
+        if "boom" in self.adapter.encoder:
+            self.excavator.boom = self.adapter.encoder["boom"]["angle"]
+        if "arm" in self.adapter.encoder:
+            self.excavator.arm = self.adapter.encoder["arm"]["angle"]
+        if "attachment" in self.adapter.encoder:
+            self.excavator.attachment = self.adapter.encoder["attachment"]["angle"]
 
-program = []
+    def start(self):
+        self.adapter.start()
+        self.adapter.wait_until_initialized()
 
-
-class Worker(Thread):
-    def __init__(self, event, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.event = event
-
-    def run(self) -> None:
-        while not self.event.is_set():
-            excavator.frame = adapter.encoder["frame"]["angle"]
-            excavator.boom = adapter.encoder["boom"]["angle"]
-            excavator.arm = adapter.encoder["arm"]["angle"]
-            excavator.attachment = adapter.encoder["attachment"]["angle"]
-            time.sleep(0.1)
-
-
-event = Event()
-thread = Worker(event)
-
-try:
-    adapter.start()
-    adapter.wait_until_initialized()
-
-    print("Machine initialized")
-
-    thread.start()
-
-    while True:
-        input("Press Enter to record a step, press ctrl-c to stop...")
-
-        effector = excavator.forward_kinematics2(joint_name="attachment_joint")
-        print("Recorded End effector:", format_euler_tuple(effector))
-
+    def record(self):
+        effector = self.excavator.forward_kinematics2(joint_name="attachment_joint")
         effector_array = [round(item, 3) for item in effector.tolist()]
+        self.program.append(effector_array)
+        return effector_array
 
-        program.append(effector_array)
-except KeyboardInterrupt:
-    event.set()
-    thread.join()
-    adapter.disable_motion()
-    adapter.stop()
+    def stop(self):
+        self.adapter.stop()
 
-    import random
-    import string
 
-    def generate_random_filename():
-        length = random.randint(5, 10)
-        return "model_" + (
-            "".join(
-                random.choice(string.ascii_lowercase + string.digits)
-                for _ in range(length)
-            )
-            + ".json"
-        )
+if __name__ == "__main__":
+    args = sys.argv[1:]
 
-    filename = generate_random_filename()
+    if len(args) < 1:
+        print("Usage: python3 record.py <program.json>")
+        sys.exit(1)
 
-    with open(f"model/{filename}", "w") as outfile:
-        json.dump(program, outfile)
+    print("Recording model:", args[0])
 
-        print()
-        print(f"Program saved to {filename}")
+    filename = args[0]
 
-    sys.exit(0)
+    recorder = Recorder(
+        definition_file=config["ROBOT_DEFINITION"],
+        host=config["GLONAX_HOST"],
+    )
+    try:
+        recorder.start()
+
+        while True:
+            input("Press Enter to record a step, press ctrl-c to stop...")
+
+            effector = recorder.record()
+            print("Recorded End effector:", format_euler_tuple(effector))
+
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        traceback.print_exception(type(e), e, e.__traceback__)
+    finally:
+        recorder.stop()
+
+        with open(filename, "w") as outfile:
+            json.dump(recorder.program, outfile)
+
+            print()
+            print(f"Program saved to {filename}")

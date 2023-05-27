@@ -9,41 +9,13 @@ import traceback
 import numpy as np
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter, ExcavatorActuator
+from pyglonax.motion import MotionProfile
 from pyglonax.util import get_config, format_euler_tuple, format_angle_both
 from pyglonax.alg import shortest_rotation
 
 config = get_config()
 
 np.set_printoptions(formatter={"float": lambda x: "{0:0.3f}".format(x)})
-
-
-class MotionProfile:
-    def __init__(self, scale, offset, lower_bound, inverse):
-        self.scale = scale
-        self.offset = offset
-        self.lower_bound = lower_bound
-        self.inverse = inverse
-
-    def proportional_power(self, value):
-        if abs(value) > self.lower_bound:
-            power = self.offset + min((abs(value) * self.scale), 32_767 - self.offset)
-            if value < 0:
-                return -power
-            else:
-                return power
-        else:
-            return 0
-
-    def proportional_power_inverse(self, value):
-        if abs(value) > self.lower_bound:
-            power = value * self.scale
-
-            if value > 0:
-                return max(-power, -(32_767 - self.offset)) - self.offset
-            else:
-                return min(-power, 32_767 - self.offset) + self.offset
-        else:
-            return 0
 
 
 tolerance = float(config["ROBOT_KIN_TOL"])

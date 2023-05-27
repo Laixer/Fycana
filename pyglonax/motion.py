@@ -12,31 +12,6 @@ POWER_NEUTRAL = 0
 POWER_MIN = -32_000
 
 
-# TODO: Remove this
-class Motion:
-    def __init__(self, channel):
-        self._stub = vms_pb2_grpc.VehicleManagementStub(channel)
-
-    def _commit(self, motion_request):
-        try:
-            return self._stub.MotionCommand(motion_request, timeout=1)
-        except grpc.RpcError as e:
-            logging.error("Error sending motion command: %s", e.details())
-
-    def change(self, motion_list):
-        changes = map(
-            lambda a: vms_pb2.Motion.ChangeSet(actuator=a[0], value=a[1]), motion_list
-        )
-
-        self._commit(vms_pb2.Motion(type=vms_pb2.Motion.CHANGE, changes=changes))
-
-    def stop_all(self):
-        self._commit(vms_pb2.Motion(type=vms_pb2.Motion.STOP_ALL))
-
-    def resume_all(self):
-        self._commit(vms_pb2.Motion(type=vms_pb2.Motion.RESUME_ALL))
-
-
 class MotionProfile:
     def __init__(self, scale, offset, lower_bound, inverse):
         self.scale = scale
