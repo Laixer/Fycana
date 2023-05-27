@@ -5,10 +5,8 @@ import sys
 import json
 import traceback
 
-
 from pyglonax.excavator import Excavator, ExcavatorAdapter
 from pyglonax.util import get_config, format_euler_tuple
-
 
 config = get_config()
 

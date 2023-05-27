@@ -2,6 +2,7 @@
 
 import os
 import sys
+import csv
 import time
 import json
 import time
@@ -15,23 +16,21 @@ from pyglonax.alg import shortest_rotation
 
 config = get_config()
 
-np.set_printoptions(formatter={"float": lambda x: "{0:0.3f}".format(x)})
-
 
 tolerance = float(config["ROBOT_KIN_TOL"])
 
-motion_profile_slew = MotionProfile(10_000, 12_000, tolerance, False)
-motion_profile_boom = MotionProfile(15_000, 12_000, tolerance, True)
-motion_profile_arm = MotionProfile(15_000, 12_000, tolerance, False)
-motion_profile_attachment = MotionProfile(15_000, 12_000, tolerance, False)
-
 
 class Executor:
-    def __init__(self, definition_file, host, supervisor=True):
+    def __init__(self, definition_file, host, supervisor=True, trace=False):
         self.excavator = Excavator.from_urdf(file_path=definition_file)
         self.adapter = ExcavatorAdapter(host=host)
         self.supervisor = supervisor
+        self.trace = trace
         self.adapter.on_signal_update(self._update_signal)
+        self.motion_profile_slew = MotionProfile(10_000, 12_000, tolerance, False)
+        self.motion_profile_boom = MotionProfile(15_000, 12_000, tolerance, True)
+        self.motion_profile_arm = MotionProfile(15_000, 12_000, tolerance, False)
+        self.motion_profile_attachment = MotionProfile(15_000, 12_000, tolerance, False)
 
     def _update_signal(self, signal):
         if "frame" in self.adapter.encoder:
@@ -72,6 +71,25 @@ class Executor:
         if self.supervisor:
             input("Press Enter to continue...")
 
+        trace_file = None
+        trace_writer = None
+        if self.trace:
+            trace_file = open(f"prog_trace_step_{idx}.csv", "w")
+            trace_writer = csv.writer(trace_file)
+
+            header = [
+                "iteration",
+                "frame_error",
+                "frame_power",
+                "boom_error",
+                "boom_power",
+                "arm_error",
+                "arm_power",
+                "attachment_error",
+                "attachment_power",
+            ]
+            trace_writer.writerow(header)
+
         count = 0
         while True:
             count += 1
@@ -86,12 +104,16 @@ class Executor:
             rel_arm_error = rel_error[3]
             rel_attachment_error = rel_error[4]
 
-            power_setting_slew = motion_profile_slew.proportional_power(rel_frame_error)
-            power_setting_boom = motion_profile_boom.proportional_power(rel_boom_error)
-            power_setting_arm = motion_profile_arm.proportional_power_inverse(
+            power_setting_slew = self.motion_profile_slew.proportional_power(
+                rel_frame_error
+            )
+            power_setting_boom = self.motion_profile_boom.proportional_power(
+                rel_boom_error
+            )
+            power_setting_arm = self.motion_profile_arm.proportional_power_inverse(
                 rel_arm_error
             )
-            power_setting = motion_profile_attachment.proportional_power(
+            power_setting = self.motion_profile_attachment.proportional_power(
                 rel_attachment_error
             )
 
@@ -125,12 +147,29 @@ class Executor:
                 ]
             )
 
+            if trace_writer is not None:
+                data = [
+                    count,
+                    rel_frame_error,
+                    power_setting_slew,
+                    rel_boom_error,
+                    power_setting_boom,
+                    rel_arm_error,
+                    power_setting_arm,
+                    rel_attachment_error,
+                    power_setting,
+                ]
+                trace_writer.writerow(data)
+
             if (
                 abs(rel_frame_error) < tolerance
                 and abs(rel_boom_error) < tolerance
                 and abs(rel_arm_error) < tolerance
                 and abs(rel_attachment_error) < tolerance
             ):
+                if trace_file is not None:
+                    trace_file.close()
+
                 print()
                 print("Objective reached")
                 if self.supervisor:
@@ -180,10 +219,16 @@ if __name__ == "__main__":
         if args[1] == "--no-supervisor":
             supervisor = False
 
+    trace = False
+    if len(args) == 2:
+        if args[1] == "--trace":
+            trace = True
+
     executor = Executor(
         definition_file=config["ROBOT_DEFINITION"],
         host=config["GLONAX_HOST"],
         supervisor=supervisor,
+        trace=trace,
     )
     try:
         executor.start(program)
