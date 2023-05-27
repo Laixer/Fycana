@@ -8,13 +8,11 @@ import json
 import numpy as np
 
 
-from pyglonax.excavator import Excavator, ExcavatorAdapter, ExcavatorActuator
+from pyglonax.excavator import Excavator, ExcavatorAdapter
 from pyglonax.util import get_config
 from pyglonax.alg import shortest_rotation
 
 config = get_config()
-
-# np.set_printoptions(formatter={"float": lambda x: "{0:0.3f}".format(x)})
 
 
 def format_angle(value):

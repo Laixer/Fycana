@@ -78,8 +78,13 @@ motion_profile_arm = MotionProfile(15_000, 12_000, tolerance, False)
 motion_profile_attachment = MotionProfile(15_000, 12_000, tolerance, False)
 
 excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
-
 adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
+
+args = sys.argv[1:]
+
+if len(args) < 1:
+    print("Usage: python3 run_prog.py <program.json>")
+    sys.exit(1)
 
 adapter.start()
 adapter.wait_until_initialized()
@@ -91,14 +96,20 @@ excavator.boom = adapter.encoder["boom"]["angle"]
 excavator.arm = adapter.encoder["arm"]["angle"]
 excavator.attachment = adapter.encoder["attachment"]["angle"]
 
-json_file = json.load(open("model/data2.json"))
+print("Loading model:", args[0])
+
+json_file = json.load(open(f"{args[0]}"))
 program = np.array(json_file)
 
 print("Program:")
 for idx, target in enumerate(program):
     print(f"{idx}", format_euler_tuple(target))
 
-SUPERVISOR=False
+SUPERVISOR = True
+
+if len(args) == 2:
+    if args[1] == "--no-supervisor":
+        SUPERVISOR = False
 
 print()
 print("Starting program")
