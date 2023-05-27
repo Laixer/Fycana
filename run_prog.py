@@ -59,6 +59,17 @@ class Executor:
         self.excavator = Excavator.from_urdf(file_path=definition_file)
         self.adapter = ExcavatorAdapter(host=host)
         self.supervisor = supervisor
+        self.adapter.on_signal_update(self._update_signal)
+
+    def _update_signal(self, signal):
+        if "frame" in self.adapter.encoder:
+            self.excavator.frame = self.adapter.encoder["frame"]["angle"]
+        if "boom" in self.adapter.encoder:
+            self.excavator.boom = self.adapter.encoder["boom"]["angle"]
+        if "arm" in self.adapter.encoder:
+            self.excavator.arm = self.adapter.encoder["arm"]["angle"]
+        if "attachment" in self.adapter.encoder:
+            self.excavator.attachment = self.adapter.encoder["attachment"]["angle"]
 
     def solve_target(self, idx, target):
         effector = self.excavator.forward_kinematics2(joint_name="attachment_joint")
@@ -92,11 +103,6 @@ class Executor:
         count = 0
         while True:
             count += 1
-
-            self.excavator.frame = self.adapter.encoder["frame"]["angle"]
-            self.excavator.boom = self.adapter.encoder["boom"]["angle"]
-            self.excavator.arm = self.adapter.encoder["arm"]["angle"]
-            self.excavator.attachment = self.adapter.encoder["attachment"]["angle"]
 
             print()
             print(f"Iter: {count} Target:", format_euler_tuple(target))
@@ -166,7 +172,7 @@ class Executor:
                     input("Press Enter to continue...")
                 break
 
-            time.sleep(0.1)
+            time.sleep(0.05)
 
     def start(self, program):
         self.adapter.start()
