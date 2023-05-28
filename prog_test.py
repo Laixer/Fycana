@@ -1,151 +1,173 @@
+#!/usr/bin/env python3
+
 import time
-import logging
 
 from pyglonax.motion import POWER_MAX, POWER_MIN
-from pyglonax.excavator import Machine, Actuator
+from pyglonax.excavator import ExcavatorAdapter, ExcavatorActuator
+from pyglonax.util import get_config
+
+config = get_config()
 
 SLEEP_TIME = 1
 
-logging.basicConfig(format='%(levelname)s %(message)s', level=logging.INFO)
-
 
 class Test:
-    def __init__(self):
-        self.machine = Machine("./volvo_ec240cl.json")
+    """
+    Test the machine
+    """
+
+    def __init__(self, host):
+        self.machine = ExcavatorAdapter(host=host)
 
     def stop(self):
         self.machine.disable_motion()
+        self.machine.stop()
+
+    def _reset(self):
+        self.machine.change(
+            [
+                (ExcavatorActuator.Boom, 0),
+                (ExcavatorActuator.Arm, 0),
+                (ExcavatorActuator.Attachment, 0),
+                (ExcavatorActuator.Slew, 0),
+                (ExcavatorActuator.TrackLeft, 0),
+                (ExcavatorActuator.TrackRight, 0),
+            ]
+        )
 
     def start(self):
         self.machine.start()
         self.machine.enable_motion()
 
-        motion = self.machine.motion
-
         while True:
-            logging.info("Testing actuator: boom up")
-            motion.set([
-                (Actuator.Boom, POWER_MAX)
-            ])
+            print("Testing actuator: boom up")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.Boom, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing actuator: boom down")
-            motion.set([
-                (Actuator.Boom, POWER_MIN)
-            ])
+            print("Testing actuator: boom down")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.Boom, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing actuator: arm up")
-            motion.set([
-                (Actuator.Arm, POWER_MAX)
-            ])
+            print("Testing actuator: arm up")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.Arm, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing actuator: arm down")
-            motion.set([
-                (Actuator.Arm, POWER_MIN)
-            ])
+            print("Testing actuator: arm down")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.Arm, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing actuator: attachment up")
-            motion.set([
-                (Actuator.Attachment, POWER_MAX)
-            ])
+            print("Testing actuator: attachment up")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.Attachment, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing actuator: attachment down")
-            motion.set([
-                (Actuator.Attachment, POWER_MIN)
-            ])
+            print("Testing actuator: attachment down")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.Attachment, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing actuator: slew up")
-            motion.set([
-                (Actuator.Slew, POWER_MAX)
-            ])
+            print("Testing actuator: slew up")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.Slew, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing actuator: slew down")
-            motion.set([
-                (Actuator.Slew, POWER_MIN)
-            ])
+            print("Testing actuator: slew down")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.Slew, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing actuator: track left up")
-            motion.set([
-                (Actuator.TrackLeft, POWER_MAX)
-            ])
+            print("Testing actuator: track left up")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.TrackLeft, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing actuator: track left down")
-            motion.set([
-                (Actuator.TrackLeft, POWER_MIN)
-            ])
+            print("Testing actuator: track left down")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.TrackLeft, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing actuator: track right up")
-            motion.set([
-                (Actuator.TrackRight, POWER_MAX)
-            ])
+            print("Testing actuator: track right up")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.TrackRight, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing actuator: track right down")
-            motion.set([
-                (Actuator.TrackRight, POWER_MIN)
-            ])
+            print("Testing actuator: track right down")
+            self._reset()
+            self.machine.change([(ExcavatorActuator.TrackRight, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing drive: drive straight up")
-            motion.straight_drive(POWER_MAX)
+            print("Testing drive: drive straight up")
+            self._reset()
+            self.machine.change(
+                [
+                    (ExcavatorActuator.TrackLeft, POWER_MAX),
+                    (ExcavatorActuator.TrackRight, POWER_MAX),
+                ]
+            )
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing drive: drive straight down")
-            motion.straight_drive(POWER_MIN)
+            print("Testing drive: drive straight down")
+            self._reset()
+            self.machine.change(
+                [
+                    (ExcavatorActuator.TrackLeft, POWER_MIN),
+                    (ExcavatorActuator.TrackRight, POWER_MIN),
+                ]
+            )
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing all: actuators up")
-            motion.change([
-                (Actuator.Boom, POWER_MAX),
-                (Actuator.Arm, POWER_MAX),
-                (Actuator.Attachment, POWER_MAX),
-                (Actuator.Slew, POWER_MAX),
-                (Actuator.TrackLeft, POWER_MAX),
-                (Actuator.TrackRight, POWER_MAX),
-            ])
+            print("Testing all: actuators up")
+            self._reset()
+            self.machine.change(
+                [
+                    (ExcavatorActuator.Boom, POWER_MAX),
+                    (ExcavatorActuator.Arm, POWER_MAX),
+                    (ExcavatorActuator.Attachment, POWER_MAX),
+                    (ExcavatorActuator.Slew, POWER_MAX),
+                    (ExcavatorActuator.TrackLeft, POWER_MAX),
+                    (ExcavatorActuator.TrackRight, POWER_MAX),
+                ]
+            )
 
             time.sleep(SLEEP_TIME)
 
-            logging.info("Testing all: actuators down")
-            motion.change([
-                (Actuator.Boom, POWER_MIN),
-                (Actuator.Arm, POWER_MIN),
-                (Actuator.Attachment, POWER_MIN),
-                (Actuator.Slew, POWER_MIN),
-                (Actuator.TrackLeft, POWER_MIN),
-                (Actuator.TrackRight, POWER_MIN),
-            ])
+            print("Testing all: actuators down")
+            self._reset()
+            self.machine.change(
+                [
+                    (ExcavatorActuator.Boom, POWER_MIN),
+                    (ExcavatorActuator.Arm, POWER_MIN),
+                    (ExcavatorActuator.Attachment, POWER_MIN),
+                    (ExcavatorActuator.Slew, POWER_MIN),
+                    (ExcavatorActuator.TrackLeft, POWER_MIN),
+                    (ExcavatorActuator.TrackRight, POWER_MIN),
+                ]
+            )
 
             time.sleep(SLEEP_TIME)
 
 
 if __name__ == "__main__":
-    prog = Test()
-
+    program = Test(host=config["GLONAX_HOST"])
     try:
-        prog.start()
+        program.start()
     except KeyboardInterrupt:
-        prog.stop()
+        program.stop()
