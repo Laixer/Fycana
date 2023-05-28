@@ -10,7 +10,7 @@ config = get_config()
 logging.basicConfig(format="%(levelname)s %(message)s", level=logging.DEBUG)
 
 
-class Dump:
+class TestInputCommand:
     """
     Diagnose the machine
     """
@@ -27,7 +27,7 @@ class Dump:
 
 
 if __name__ == "__main__":
-    program = Dump(host=config["GLONAX_HOST"])
+    program = TestInputCommand(host=config["GLONAX_HOST"])
     try:
         program.start()
     except KeyboardInterrupt:

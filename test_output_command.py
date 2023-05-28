@@ -11,7 +11,7 @@ config = get_config()
 SLEEP_TIME = 1
 
 
-class Test:
+class TestOutputCommand:
     """
     Test the machine
     """
@@ -166,7 +166,7 @@ class Test:
 
 
 if __name__ == "__main__":
-    program = Test(host=config["GLONAX_HOST"])
+    program = TestOutputCommand(host=config["GLONAX_HOST"])
     try:
         program.start()
     except KeyboardInterrupt:
