@@ -9,28 +9,28 @@ import time
 import traceback
 import numpy as np
 import argparse
+import configparser
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter, ExcavatorActuator
 from pyglonax.motion import MotionProfile
-from pyglonax.util import get_config, format_euler_tuple, format_angle_both
+from pyglonax.util import format_euler_tuple, format_angle_both
 from pyglonax.alg import shortest_rotation
-
-config = get_config()
-
-tolerance = float(config["ROBOT_KIN_TOL"])
 
 
 class Executor:
-    def __init__(self, definition_file, host, supervisor=True, trace=False):
+    def __init__(self, definition_file, host, supervisor=True, trace=False, **kwargs):
         self.excavator = Excavator.from_urdf(file_path=definition_file)
         self.adapter = ExcavatorAdapter(host=host)
         self.supervisor = supervisor
         self.trace = trace
         self.adapter.on_signal_update(self._update_signal)
-        self.motion_profile_slew = MotionProfile(10_000, 12_000, tolerance, False)
-        self.motion_profile_boom = MotionProfile(15_000, 12_000, tolerance, True)
-        self.motion_profile_arm = MotionProfile(15_000, 12_000, tolerance, False)
-        self.motion_profile_attachment = MotionProfile(15_000, 12_000, tolerance, False)
+        self.tolerance = float(kwargs.get("tolerance", 0.01))
+        self.motion_profile_slew = MotionProfile(10_000, 12_000, self.tolerance, False)
+        self.motion_profile_boom = MotionProfile(15_000, 12_000, self.tolerance, True)
+        self.motion_profile_arm = MotionProfile(15_000, 12_000, self.tolerance, False)
+        self.motion_profile_attachment = MotionProfile(
+            15_000, 12_000, self.tolerance, False
+        )
 
     def _update_signal(self, signal):
         if "frame" in self.adapter.encoder:
@@ -160,10 +160,10 @@ class Executor:
                 trace_writer.writerow(data)
 
             if (
-                abs(rel_frame_error) < tolerance
-                and abs(rel_boom_error) < tolerance
-                and abs(rel_arm_error) < tolerance
-                and abs(rel_attachment_error) < tolerance
+                abs(rel_frame_error) < self.tolerance
+                and abs(rel_boom_error) < self.tolerance
+                and abs(rel_arm_error) < self.tolerance
+                and abs(rel_attachment_error) < self.tolerance
             ):
                 if trace_file is not None:
                     trace_file.close()
@@ -189,7 +189,7 @@ class Executor:
         self.adapter.wait_until_initialized()
         self.adapter.enable_motion()
 
-        print("Absolute tolerance:", tolerance)
+        print("Kinematic tolerance:", self.tolerance)
         print("Motion profile slew:", 10_000, 12_000)
         print("Motion profile boom:", 15_000, 12_000)
         print("Motion profile arm:", 15_000, 12_000)
@@ -213,19 +213,30 @@ if __name__ == "__main__":
     parser.add_argument("program", help="program file")
     parser.add_argument("-n", "--no-supervisor", action="store_true")
     parser.add_argument("-t", "--trace", action="store_true")
+    parser.add_argument("-c", "--config", default="config.ini", help="config file")
 
     args = parser.parse_args()
+
+    config = configparser.ConfigParser()
+    config.read(args.config)
+
+    host = config["glonax"]["host"]
+    port = config["glonax"]["port"]
 
     f = open(args.program)
     json_file = json.load(f)
     program = np.array(json_file)
     f.close()
 
+    robot = dict(config["robot"])
+    kinematics = dict(config["kinematics"])
+
     executor = Executor(
-        definition_file=config["ROBOT_DEFINITION"],
-        host=config["GLONAX_HOST"],
+        host=f"{host}:{port}",
         supervisor=~args.no_supervisor,
         trace=args.trace,
+        **robot,
+        **kinematics,
     )
     try:
         executor.start(program)
