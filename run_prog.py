@@ -8,6 +8,7 @@ import json
 import time
 import traceback
 import numpy as np
+import argparse
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter, ExcavatorActuator
 from pyglonax.motion import MotionProfile
@@ -208,30 +209,23 @@ class Executor:
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("program", help="program file")
+    parser.add_argument("-n", "--no-supervisor", action="store_true")
+    parser.add_argument("-t", "--trace", action="store_true")
 
-    if len(args) < 1:
-        print("Usage: python3 run_prog.py <program.json> [--no-supervisor]")
-        sys.exit(1)
+    args = parser.parse_args()
 
-    json_file = json.load(open(f"{args[0]}"))
+    f = open(args.program)
+    json_file = json.load(f)
     program = np.array(json_file)
-
-    supervisor = True
-    if len(args) == 2:
-        if args[1] == "--no-supervisor":
-            supervisor = False
-
-    trace = False
-    if len(args) == 2:
-        if args[1] == "--trace":
-            trace = True
+    f.close()
 
     executor = Executor(
         definition_file=config["ROBOT_DEFINITION"],
         host=config["GLONAX_HOST"],
-        supervisor=supervisor,
-        trace=trace,
+        supervisor=~args.no_supervisor,
+        trace=args.trace,
     )
     try:
         executor.start(program)
