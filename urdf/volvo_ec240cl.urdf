@@ -47,7 +47,7 @@
         <origin xyz="0 0 1.295"/>
         <axis xyz="0 0 1"/>
         <power coefficient="5" lower="0.02" upper="32767" />
-        <limit lower="0" upper="6.283" velocity="0.5"/>
+        <!-- <limit lower="0" upper="6.283" velocity="0.5"/> -->
     </joint>
 
     <link name="frame">
