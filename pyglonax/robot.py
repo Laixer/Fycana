@@ -78,10 +78,8 @@ class Joint:
     def reduce(self, value):
         """Reduce the given value to the bounds of the joint"""
         if self.type == "continuous":
-            print(f"cycle: {value}")
             return self.cycle(value, 2 * np.pi)
         elif self.type == "revolute":
-            print(f"clip: {value}")
             return self.clip(value)
         return value
 
