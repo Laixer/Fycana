@@ -407,7 +407,13 @@ class Robot:
         if not res.success:
             raise ValueError("Could not find inverse kinematics solution")
 
-        self.position_state[1] = res.x
+        # print(res)
+
+        # TODO: Can be removed if code below works
+        # self.position_state[1] = res.x
+
+        for idx, joint in enumerate(self.joints):
+            self.position_state[1][idx] = joint.reduce(res.x[idx])
 
         return res.x
 
