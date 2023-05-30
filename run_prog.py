@@ -25,12 +25,6 @@ class Executor:
         self.trace = trace
         self.adapter.on_signal_update(self._update_signal)
         self.tolerance = float(kwargs.get("tolerance", 0.01))
-        self.motion_profile_slew = MotionProfile(10_000, 12_000, self.tolerance, False)
-        self.motion_profile_boom = MotionProfile(15_000, 12_000, self.tolerance, True)
-        self.motion_profile_arm = MotionProfile(15_000, 12_000, self.tolerance, False)
-        self.motion_profile_attachment = MotionProfile(
-            15_000, 12_000, self.tolerance, False
-        )
 
     def _update_signal(self, signal):
         if "frame" in self.adapter.encoder:
@@ -93,7 +87,7 @@ class Executor:
         count = 0
         while True:
             print()
-            print(f"Iter: {count} Target:", format_euler_tuple(target))
+            print(f"Step {idx} Iter: {count} Target:", format_euler_tuple(target))
 
             rel_error = self.excavator.get_position_error()[0]
 
@@ -102,30 +96,26 @@ class Executor:
             rel_arm_error = rel_error[3]
             rel_attachment_error = rel_error[4]
 
-            power_setting_slew = self.excavator.frame_joint.motion_profile.proportional_power(
-                rel_frame_error
+            power_setting_slew = (
+                self.excavator.frame_joint.motion_profile.proportional_power(
+                    rel_frame_error
+                )
             )
-            # power_setting_slew = self.motion_profile_slew.proportional_power(
-            #     rel_frame_error
-            # )
-            power_setting_boom = self.excavator.boom_joint.motion_profile.proportional_power(
-                rel_boom_error
+            power_setting_boom = (
+                self.excavator.boom_joint.motion_profile.proportional_power(
+                    rel_boom_error
+                )
             )
-            # power_setting_boom = self.motion_profile_boom.proportional_power(
-            #     rel_boom_error
-            # )
-            power_setting_arm = self.excavator.arm_joint.motion_profile.proportional_power_inverse(
-                rel_arm_error
+            power_setting_arm = (
+                self.excavator.arm_joint.motion_profile.proportional_power_inverse(
+                    rel_arm_error
+                )
             )
-            # power_setting_arm = self.motion_profile_arm.proportional_power_inverse(
-            #     rel_arm_error
-            # )
-            power_setting = self.excavator.attachment_joint.motion_profile.proportional_power(
-                rel_attachment_error
+            power_setting = (
+                self.excavator.attachment_joint.motion_profile.proportional_power(
+                    rel_attachment_error
+                )
             )
-            # power_setting = self.motion_profile_attachment.proportional_power(
-            #     rel_attachment_error
-            # )
 
             print(
                 "{:<15}".format("Frame"),
