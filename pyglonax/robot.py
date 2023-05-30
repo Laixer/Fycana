@@ -154,9 +154,7 @@ class Robot:
             origin_orientation = None
             rotation = None
             translation = None
-            bounds = np.array(
-                [-np.inf, np.inf]
-            )  # TODO: Maybe set to 0 for fixed joints
+            bounds = np.array([-np.inf, np.inf])
 
             # Find the translation and rotation of the joint origin
             elem_origin = elem_joint.find("origin")
@@ -252,8 +250,9 @@ class Robot:
         idx = self._get_joint_index_by_name(name)
         if self.joints[idx].type == "fixed":
             raise ValueError(f"Joint {name} is fixed")
-        if not self.joints[idx].is_within_bounds(value):
-            raise ValueError(f"Value {value} is out of bounds for joint {name}")
+        # TODO: Remove this. For now we allow setting the joint position outside the bounds
+        # if not self.joints[idx].is_within_bounds(value):
+        # raise ValueError(f"Value {value} is out of bounds for joint {name}")
         self.position_state[dim][idx] = value
 
     def get_position_state_actual(self):
@@ -283,23 +282,6 @@ class Robot:
         return np.allclose(
             self.get_position_error()[0][1:4], 0.0, atol=tolerance
         )  # TODO: Remove 0:1:4
-
-    # def forward_orientation(self):
-    #     joint_rotation = np.array([0, 0, 0])
-    #     frame = np.empty((0, 3))
-    #     for joint, joint_parameter in zip(
-    #         self.joints, self.get_position_state_actual()
-    #     ):
-    #         joint_joint = np.array([0, 0, 0])
-    #         if joint.origin_orientation is not None:
-    #             joint_joint = joint.origin_orientation
-    #         if joint.rotation is not None:
-    #             rotation = joint.rotation * joint_parameter
-    #             joint_joint = joint_joint + rotation
-    #         joint_rotation = joint_rotation + joint_joint
-    #         frame = np.append(frame, np.array([joint_rotation]), axis=0)
-
-    #     return frame
 
     def _calculate_forward_kinematics(self, joint_parameters, joint_name=None):
         if len(self.joints) != len(joint_parameters):
