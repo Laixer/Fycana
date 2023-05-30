@@ -11,6 +11,8 @@ import numpy as np
 import argparse
 import configparser
 
+from datetime import datetime
+
 from pyglonax.excavator import Excavator, ExcavatorAdapter, ExcavatorActuator
 from pyglonax.motion import MotionProfile
 from pyglonax.util import format_euler_tuple, format_angle_both
@@ -73,6 +75,7 @@ class Executor:
 
             header = [
                 "iteration",
+                "timestamp",
                 "frame_error",
                 "frame_power",
                 "boom_error",
@@ -87,7 +90,7 @@ class Executor:
         count = 0
         while True:
             print()
-            print(f"Step {idx} Iter: {count} Target:", format_euler_tuple(target))
+            print(f"Step: {idx} Iter: {count} Target:", format_euler_tuple(target))
 
             rel_error = self.excavator.get_position_error()[0]
 
@@ -148,8 +151,11 @@ class Executor:
             )
 
             if trace_writer is not None:
+                now = datetime.now()
+
                 data = [
                     count,
+                    now.isoformat(),
                     rel_frame_error,
                     power_setting_slew,
                     rel_boom_error,
