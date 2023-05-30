@@ -14,7 +14,6 @@ import configparser
 from datetime import datetime
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter, ExcavatorActuator
-from pyglonax.motion import MotionProfile
 from pyglonax.util import format_euler_tuple, format_angle_both
 from pyglonax.alg import shortest_rotation
 
