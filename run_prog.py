@@ -177,6 +177,7 @@ class Executor:
                 )
                 print("Target   :", format_euler_tuple(target))
                 print("Effector :", format_euler_tuple(effector))
+                print("EmpError :", format_euler_tuple(target - effector))
                 if self.supervisor:
                     input("Press Enter to continue...")
                 break
