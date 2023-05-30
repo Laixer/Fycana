@@ -5,7 +5,7 @@ from scipy import optimize
 
 from xml.etree import ElementTree as ET
 
-from . import geom, util
+from . import geom, util, motion
 
 
 class Link:
@@ -26,6 +26,7 @@ class Joint:
         rotation=None,
         translation=None,
         bounds=np.array([-np.inf, np.inf]),
+        motion_profile=None,
     ):
         self.name = name
         self.type = type
@@ -35,6 +36,7 @@ class Joint:
         self.rotation = rotation
         self.translation = translation
         self.bounds = bounds
+        self.motion_profile = motion_profile
 
     @property
     def lower_bound(self):
@@ -153,6 +155,7 @@ class Robot:
             rotation = None
             translation = None
             bounds = np.array([-np.inf, np.inf])
+            motion_profile = None
 
             # Find the translation and rotation of the joint origin
             elem_origin = elem_joint.find("origin")
@@ -193,6 +196,27 @@ class Robot:
                     if "upper" in elem_limit.attrib:
                         bounds[1] = elem_limit.attrib["upper"]
 
+            # Find the joint power
+            elem_power = elem_joint.find("power")
+            if elem_power is not None:
+                power_scale = 0
+                power_offset = 0
+                power_tolerance = 0.0
+                power_inverse = False
+                if "scale" in elem_power.attrib:
+                    power_scale = int(elem_power.attrib["scale"])
+                if "offset" in elem_power.attrib:
+                    power_offset = int(elem_power.attrib["offset"])
+                if "tolerance" in elem_power.attrib:
+                    power_tolerance = float(elem_power.attrib["tolerance"])
+                if "inverse" in elem_power.attrib:
+                    if elem_power.attrib["inverse"] == "1":
+                        power_inverse = True
+
+                motion_profile = motion.MotionProfile(
+                    power_scale, power_offset, power_tolerance, power_inverse
+                )
+
             joint = Joint(
                 name=joint_name,
                 type=joint_type,
@@ -201,6 +225,7 @@ class Robot:
                 rotation=rotation,
                 translation=translation,
                 bounds=bounds,
+                motion_profile=motion_profile,
             )
             robot.add_joint(joint, parent, child)
 
