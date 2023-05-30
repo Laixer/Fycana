@@ -297,14 +297,14 @@ class Robot:
         return np.diff(self.position_state, axis=0)
 
     # TODO: Maybe remove?
-    def get_position_state_full(self):
-        return np.vstack((self.position_state, self.get_position_error()))
+    # def get_position_state_full(self):
+    #     return np.vstack((self.position_state, self.get_position_error()))
 
     # TODO: Maybe remove?
-    def is_objective_reached(self, tolerance=0.005):
-        return np.allclose(
-            self.get_position_error()[0][1:4], 0.0, atol=tolerance
-        )  # TODO: Remove 0:1:4
+    # def is_objective_reached(self, tolerance=0.005):
+    #     return np.allclose(
+    #         self.get_position_error()[0][1:4], 0.0, atol=tolerance
+    #     )  # TODO: Remove 0:1:4
 
     def _calculate_forward_kinematics(self, joint_parameters, joint_name=None):
         if len(self.joints) != len(joint_parameters):
@@ -447,7 +447,7 @@ class Robot:
 
     # TODO: Clean up
     def __str__(self) -> str:
-        position_state = self.get_position_state_full().T
+        # position_state = self.get_position_state_full().T
 
         s = f"Robot={self.name}"
         if self.model is not None:
@@ -457,9 +457,9 @@ class Robot:
             s += f"\n  {joint}"
         s += "\n"
         s += f"EndEffectorVector={util.numpy3d_to_string(self.forward_kinematics2(joint_name='attachment_joint')[:3])}, EndEffectorOrientation={util.numpy3d_to_string(self.forward_kinematics2(joint_name='attachment_joint')[3:])}\n"
-        s += f"ObjectiveReached={self.is_objective_reached()}\n"
-        for idx, joint in enumerate(self.joints):
-            s += f"  Joint={joint.name}, Actual={np.rad2deg(position_state[idx][0]):.2f}°, Projected={np.rad2deg(position_state[idx][1]):.2f}°, Error={np.rad2deg(position_state[idx][2]):.2f}°\n"
+        # s += f"ObjectiveReached={self.is_objective_reached()}\n"
+        # for idx, joint in enumerate(self.joints):
+        #     s += f"  Joint={joint.name}, Actual={np.rad2deg(position_state[idx][0]):.2f}°, Projected={np.rad2deg(position_state[idx][1]):.2f}°, Error={np.rad2deg(position_state[idx][2]):.2f}°\n"
         return s
 
     # TODO: Move to util

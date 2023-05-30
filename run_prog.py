@@ -102,18 +102,30 @@ class Executor:
             rel_arm_error = rel_error[3]
             rel_attachment_error = rel_error[4]
 
-            power_setting_slew = self.motion_profile_slew.proportional_power(
+            power_setting_slew = self.excavator.frame_joint.motion_profile.proportional_power(
                 rel_frame_error
             )
-            power_setting_boom = self.motion_profile_boom.proportional_power(
+            # power_setting_slew = self.motion_profile_slew.proportional_power(
+            #     rel_frame_error
+            # )
+            power_setting_boom = self.excavator.boom_joint.motion_profile.proportional_power(
                 rel_boom_error
             )
-            power_setting_arm = self.motion_profile_arm.proportional_power_inverse(
+            # power_setting_boom = self.motion_profile_boom.proportional_power(
+            #     rel_boom_error
+            # )
+            power_setting_arm = self.excavator.arm_joint.motion_profile.proportional_power_inverse(
                 rel_arm_error
             )
-            power_setting = self.motion_profile_attachment.proportional_power(
+            # power_setting_arm = self.motion_profile_arm.proportional_power_inverse(
+            #     rel_arm_error
+            # )
+            power_setting = self.excavator.attachment_joint.motion_profile.proportional_power(
                 rel_attachment_error
             )
+            # power_setting = self.motion_profile_attachment.proportional_power(
+            #     rel_attachment_error
+            # )
 
             print(
                 "{:<15}".format("Frame"),
