@@ -71,6 +71,20 @@ class Joint:
         """Clip the given value to the bounds of the joint"""
         return np.clip(value, self.lower_bound, self.upper_bound)
 
+    def cycle(self, value, domain=None):
+        """Cycle the given value to the bounds of the joint"""
+        return np.mod(value, self.domain if domain is None else domain)
+
+    def reduce(self, value):
+        """Reduce the given value to the bounds of the joint"""
+        if self.type == "continuous":
+            print(f"cycle: {value}")
+            return self.cycle(value, 2 * np.pi)
+        elif self.type == "revolute":
+            print(f"clip: {value}")
+            return self.clip(value)
+        return value
+
     def __str__(self):
         return f"Joint={self.name}, Type={self.type}, OriginTranslation={util.numpy3d_to_string(self.origin_translation)}, OriginOrientation={util.numpy3d_to_string(self.origin_orientation)}, Rotation={util.numpy3d_to_string(self.rotation)}, Translation={util.numpy3d_to_string(self.translation)}, Bounds={self.bounds}"
 
