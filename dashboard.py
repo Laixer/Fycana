@@ -3,6 +3,7 @@
 import os
 import time
 import math
+import numpy as np
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter
 from pyglonax.util import get_config
@@ -201,10 +202,16 @@ class EncoderTable:
                 table.add_row(
                     joint.name,
                     "{:3.3f}".format(adapter.encoder[encoder_name]["position"]),
-                    format_angle(joint.lower_bound),
+                    format_angle(joint.lower_bound)
+                    if joint.lower_bound is not None and not np.isinf(joint.lower_bound)
+                    else "-",
                     format_angle(adapter.encoder[encoder_name]["angle"]),
-                    format_percent(normal * 100),
-                    format_angle(joint.upper_bound),
+                    format_percent(normal * 100)
+                    if joint.upper_bound is not None and not np.isinf(joint.upper_bound)
+                    else "-",
+                    format_angle(joint.upper_bound)
+                    if joint.upper_bound is not None and not np.isinf(joint.upper_bound)
+                    else "-",
                 )
 
         return table
@@ -318,18 +325,10 @@ with Live(layout, refresh_per_second=20) as live:
     try:
         while True:
             if adapter.is_initialized():
-                excavator.frame = excavator.frame_joint.clip(
-                    adapter.encoder["frame"]["angle"]
-                )
-                excavator.boom = excavator.boom_joint.clip(
-                    adapter.encoder["boom"]["angle"]
-                )
-                excavator.arm = excavator.arm_joint.clip(
-                    adapter.encoder["arm"]["angle"]
-                )
-                excavator.attachment = excavator.attachment_joint.clip(
-                    adapter.encoder["attachment"]["angle"]
-                )
+                excavator.frame = adapter.encoder["frame"]["angle"]
+                excavator.boom = adapter.encoder["boom"]["angle"]
+                excavator.arm = adapter.encoder["arm"]["angle"]
+                excavator.attachment = adapter.encoder["attachment"]["angle"]
 
             if adapter.status == adapter.ConnectionState.DISCONNECTED:
                 adapter.restart()
