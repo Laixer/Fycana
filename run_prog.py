@@ -247,3 +247,57 @@ if __name__ == "__main__":
         traceback.print_exception(type(e), e, e.__traceback__)
     finally:
         executor.stop()
+
+# if __name__ == "__main__":
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("-n", "--no-supervisor", action="store_true")
+#     parser.add_argument("-t", "--trace", action="store_true")
+#     parser.add_argument("-c", "--config", default="config.ini", help="config file")
+
+#     args = parser.parse_args()
+
+#     config = configparser.ConfigParser()
+#     config.read(args.config)
+
+#     host = config["glonax"]["host"]
+#     port = config["glonax"]["port"]
+
+#     robot = dict(config["robot"])
+#     kinematics = dict(config["kinematics"])
+
+#     executor = Executor(
+#         host=f"{host}:{port}",
+#         supervisor=True,
+#         trace=args.trace,
+#         **robot,
+#         **kinematics,
+#     )
+#     try:
+#         import random
+
+#         executor.start()
+
+#         idx = 0
+#         while True:
+#             random_frame = random.randint(0, 6283) / 1000
+#             random_boom = random.randint(-1047, 785) / 1000
+#             random_arm = random.randint(680, 2760) / 1000
+#             random_attachment = random.randint(-962, 2190) / 1000
+
+#             x = [0, random_frame, random_boom, random_arm, random_attachment, 0]
+#             # x = [0, 6.171, -1.044, 1.071, -0.087, 0]
+#             print("Random X:", x)
+#             target = executor.excavator._calculate_forward_kinematics(
+#                 x, joint_name="attachment_joint"
+#             )[-1]
+
+#             # target = np.array([4.00, -1.29, 2.7, 0.0, 0.0, 0])
+
+#             executor.solve_target(idx, target)
+#             idx += 1
+#     except KeyboardInterrupt:
+#         pass
+#     except Exception as e:
+#         traceback.print_exception(type(e), e, e.__traceback__)
+#     finally:
+#         executor.stop()
