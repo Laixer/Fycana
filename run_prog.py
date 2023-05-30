@@ -185,7 +185,7 @@ class Executor:
             count += 1
             time.sleep(0.05)
 
-    def start(self, program):
+    def start(self):
         self.adapter.start()
         self.adapter.wait_until_initialized()
         self.adapter.enable_motion()
@@ -195,14 +195,6 @@ class Executor:
         print("Motion profile boom:", 15_000, 12_000)
         print("Motion profile arm:", 15_000, 12_000)
         print("Motion profile attachment:", 15_000, 12_000)
-
-        print()
-        print("Program:")
-        for idx, target in enumerate(program):
-            print(f"{idx}", format_euler_tuple(target))
-
-        for idx, target in enumerate(program):
-            self.solve_target(idx, target)
 
     def stop(self):
         self.adapter.disable_motion()
@@ -240,7 +232,15 @@ if __name__ == "__main__":
         **kinematics,
     )
     try:
-        executor.start(program)
+        executor.start()
+
+        print()
+        print("Program:")
+        for idx, target in enumerate(program):
+            print(f"{idx}", format_euler_tuple(target))
+
+        for idx, target in enumerate(program):
+            executor.solve_target(idx, target)
     except KeyboardInterrupt:
         pass
     except Exception as e:
