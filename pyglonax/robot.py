@@ -399,10 +399,15 @@ class Robot:
 
             target_error = fk - target
 
+            # print(f"x={x}, fk={fk}, target={target}, target_error={target_error}")
+
             return target_error
 
         res = optimize.least_squares(
-            optimize_function, self.get_position_state_actual(), bounds=(lb, ub)
+            optimize_function,
+            self.get_position_state_actual(),
+            bounds=(lb, ub),
+            ftol=None,
         )
         if not res.success:
             raise ValueError("Could not find inverse kinematics solution")
