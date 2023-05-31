@@ -45,7 +45,7 @@
         <child link="frame"/>
         <origin xyz="0 0 1.295"/>
         <axis xyz="0 0 1"/>
-        <power scale="10000" offset="12000" tolerance="0.01" inverse="0" />
+        <power scale="7000" offset="12000" tolerance="0.01" inverse="0" />
         <!-- <limit lower="0" upper="6.283" velocity="0.5"/> -->
     </joint>
 
