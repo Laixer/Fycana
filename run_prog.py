@@ -69,7 +69,9 @@ class Executor:
         trace_file = None
         trace_writer = None
         if self.trace:
-            trace_file = open(f"prog_trace_step_{idx}.csv", "w")
+            unix_time = int(time.time())
+
+            trace_file = open(f"trace/prog_{unix_time}_step_{idx}.csv", "w")
             trace_writer = csv.writer(trace_file)
 
             header = [
