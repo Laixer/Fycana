@@ -21,7 +21,6 @@
       },{
         "name": "frame",
         "type": "continuous",
-        "parent": "undercarriage",
         "device": "0x6a",
         "origin": {"translation":[0, 0, 1.295]},
         "axis": [0, 0, 1],
@@ -29,7 +28,6 @@
       },{
         "name": "boom",
         "type": "revolute",
-        "parent": "frame",
         "device": "0x6b",
         "origin": {"translation": [0.16, 0, 0.595]},
         "axis": [0, 1, 0],
@@ -38,7 +36,6 @@
       },{
         "name": "arm",
         "type": "revolute",
-        "parent": "boom",
         "device": "0x6c",
         "origin": {"translation": [6, 0, 0]},
         "axis": [0, 1, 0],
@@ -47,7 +44,6 @@
       },{
         "name": "attachment",
         "type": "revolute",
-        "parent": "arm",
         "device": "0x6d",
         "origin": {"translation": [2.97, 0, 0]},
         "axis": [0, 1, 0],
@@ -56,7 +52,6 @@
       },{
         "name": "end",
         "type": "fixed",
-        "parent": "attachment",
         "origin": {"translation": [1.5, 0, 0]},
         "axis": [0, 1, 0]
       }]
