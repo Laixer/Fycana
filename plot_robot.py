@@ -12,7 +12,7 @@ matplotlib.use("TkAgg")
 
 config = get_config()
 
-excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
+excavator = Excavator.from_json(file_path=config["ROBOT_DEFINITION"])
 
 adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
 adapter.start()

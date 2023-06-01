@@ -20,12 +20,13 @@ from pyglonax.alg import shortest_rotation
 
 class Executor:
     def __init__(self, definition_file, host, supervisor=True, trace=False, **kwargs):
-        self.excavator = Excavator.from_urdf(file_path=definition_file)
+        self.excavator = Excavator.from_json(file_path=definition_file)
         self.adapter = ExcavatorAdapter(host=host)
         self.supervisor = supervisor
         self.trace = trace
         self.adapter.on_signal_update(self._update_signal)
         self.tolerance = float(kwargs.get("tolerance", 0.01))
+        self.articulation_chain = self.excavator.get_chain_by_name("articulation_arm")
 
     def _update_signal(self, signal):
         if "frame" in self.adapter.encoder:
@@ -37,30 +38,31 @@ class Executor:
         if "attachment" in self.adapter.encoder:
             self.excavator.attachment = self.adapter.encoder["attachment"]["angle"]
 
-    def solve_target(self, idx, target):
-        effector = self.excavator.forward_kinematics2(joint_name="attachment_joint")
+    def solve_target(self, step, target):
+        effector = self.articulation_chain.opspace_forward_kinematics()
 
         print("")
-        print(f"Step {idx} projection:")
-        print("Target   :", format_euler_tuple(target))
-        print("Effector :", format_euler_tuple(effector))
+        print(f"Step {step} projection:")
+        print("Target        : ", format_euler_tuple(target))
+        print("Effector      : ", format_euler_tuple(effector))
+        print("Opspace Error : ", format_euler_tuple(target - effector))
 
-        self.excavator.inverse_kinematics(target[:3])
+        self.articulation_chain.inverse_kinematics(target[:3])
 
-        proj_angle = np.sum(self.excavator.get_position_state_projected()[2:])
-        print("IK: Projected Pitch:", format_angle_both(proj_angle))
-        abs_error = target[4] - proj_angle
-        print("IK: AbsPitch error:", format_angle_both(abs_error))
+        forward_projection = self.articulation_chain.projected_forward_kinematics()
+        print("  IK: Projected Pitch:", format_angle_both(forward_projection[4]))
+        abs_error = target[4] - forward_projection[4]
+        print("  IK: AbsPitch error:", format_angle_both(abs_error))
         rel_pitch_error0 = self.excavator.attachment + abs_error
-        print("IK: RelPitch error:", format_angle_both(rel_pitch_error0))
+        print("  IK: RelPitch error:", format_angle_both(rel_pitch_error0))
 
-        bc = self.excavator.attachment_joint.is_within_bounds(rel_pitch_error0)
-        print("IK: Is Within bounds:", bc)
-        if not bc:
+        is_within_bounds = self.excavator.attachment_joint.is_within_bounds(
+            rel_pitch_error0
+        )
+        print("  IK: Is Within bounds:", is_within_bounds)
+        if not is_within_bounds:
             rel_pitch_error0 = self.excavator.attachment_joint.clip(rel_pitch_error0)
-            print("IK: Clipped angle:", rel_pitch_error0)
-
-        self.excavator.position_state[1][4] = rel_pitch_error0
+            print("  IK: Clipped angle:", rel_pitch_error0)
 
         print()
         if self.supervisor:
@@ -71,7 +73,7 @@ class Executor:
         if self.trace:
             unix_time = int(time.time())
 
-            trace_file = open(f"trace/prog_{unix_time}_step_{idx}.csv", "w")
+            trace_file = open(f"trace/prog_{unix_time}_step_{step}.csv", "w")
             trace_writer = csv.writer(trace_file)
 
             header = [
@@ -91,65 +93,39 @@ class Executor:
         count = 0
         while True:
             print()
-            print(f"Step: {idx} Iter: {count} Target:", format_euler_tuple(target))
+            print(f"Step: {step} Iter: {count} Target:", format_euler_tuple(target))
 
-            rel_error = self.excavator.get_position_error()[0]
+            self.articulation_chain.position_state[3] = rel_pitch_error0
 
-            rel_frame_error = shortest_rotation(rel_error[1])
-            rel_boom_error = rel_error[2]
-            rel_arm_error = rel_error[3]
-            rel_attachment_error = rel_error[4]
+            rel_error = self.articulation_chain.error()
+            rel_power = np.zeros(rel_error.shape[0], dtype=np.int32)
 
-            power_setting_slew = (
-                self.excavator.frame_joint.motion_profile.proportional_power(
-                    rel_frame_error
+            rel_error[0] = shortest_rotation(rel_error[0])
+
+            motion_list = []
+
+            for idx, joint in enumerate(self.articulation_chain.joints):
+                rel_power[idx] = joint.motion_profile.power(rel_error[idx])
+
+                print(
+                    "{:<15}".format(joint.name),
+                    "  Error: {:>15}".format(format_angle_both(rel_error[idx])),
+                    "  Power: {:>6d}".format(rel_power[idx]),
                 )
-            )
-            power_setting_boom = (
-                self.excavator.boom_joint.motion_profile.proportional_power(
-                    rel_boom_error
-                )
-            )
-            power_setting_arm = (
-                self.excavator.arm_joint.motion_profile.proportional_power_inverse(
-                    rel_arm_error
-                )
-            )
-            power_setting = (
-                self.excavator.attachment_joint.motion_profile.proportional_power(
-                    rel_attachment_error
-                )
-            )
 
-            print(
-                "{:<15}".format("Frame"),
-                "  Error: {:>15}".format(format_angle_both(rel_frame_error)),
-                "  Power: {:>6d}".format(int(power_setting_slew)),
-            )
-            print(
-                "{:<15}".format("Boom"),
-                "  Error: {:>15}".format(format_angle_both(rel_boom_error)),
-                "  Power: {:>6d}".format(int(power_setting_boom)),
-            )
-            print(
-                "{:<15}".format("Arm"),
-                "  Error: {:>15}".format(format_angle_both(rel_arm_error)),
-                "  Power: {:>6d}".format(int(power_setting_arm)),
-            )
-            print(
-                "{:<15}".format("Attachment"),
-                "  Error: {:>15}".format(format_angle_both(rel_attachment_error)),
-                "  Power: {:>6d}".format(int(power_setting)),
-            )
+                actuator = None
+                if joint.name == "frame":
+                    actuator = ExcavatorActuator.Slew
+                elif joint.name == "boom":
+                    actuator = ExcavatorActuator.Boom
+                elif joint.name == "arm":
+                    actuator = ExcavatorActuator.Arm
+                elif joint.name == "attachment":
+                    actuator = ExcavatorActuator.Attachment
 
-            self.adapter.change(
-                [
-                    (ExcavatorActuator.Slew, int(power_setting_slew)),
-                    (ExcavatorActuator.Boom, int(power_setting_boom)),
-                    (ExcavatorActuator.Arm, int(power_setting_arm)),
-                    (ExcavatorActuator.Attachment, int(power_setting)),
-                ]
-            )
+                motion_list.append((actuator, rel_power[idx]))
+
+            self.adapter.change(motion_list)
 
             if trace_writer is not None:
                 now = datetime.now()
@@ -157,23 +133,18 @@ class Executor:
                 data = [
                     count,
                     now.isoformat(),
-                    rel_frame_error,
-                    power_setting_slew,
-                    rel_boom_error,
-                    power_setting_boom,
-                    rel_arm_error,
-                    power_setting_arm,
-                    rel_attachment_error,
-                    power_setting,
+                    rel_error[0],
+                    rel_power[0],
+                    rel_error[1],
+                    rel_power[1],
+                    rel_error[2],
+                    rel_power[2],
+                    rel_error[3],
+                    rel_power[3],
                 ]
                 trace_writer.writerow(data)
 
-            if (
-                abs(rel_frame_error) < self.tolerance
-                and abs(rel_boom_error) < self.tolerance
-                and abs(rel_arm_error) < self.tolerance
-                and abs(rel_attachment_error) < self.tolerance
-            ):
+            if np.all(np.abs(rel_error) < self.tolerance):
                 if trace_file is not None:
                     trace_file.close()
 
@@ -181,12 +152,11 @@ class Executor:
                 print("Objective reached")
                 if self.supervisor:
                     time.sleep(1)
-                effector = self.excavator.forward_kinematics2(
-                    joint_name="attachment_joint"
-                )
-                print("Target   :", format_euler_tuple(target))
-                print("Effector :", format_euler_tuple(effector))
-                print("EmpError :", format_euler_tuple(target - effector))
+
+                effector = self.articulation_chain.opspace_forward_kinematics()
+                print("Target        : ", format_euler_tuple(target))
+                print("Effector      : ", format_euler_tuple(effector))
+                print("Opspace Error : ", format_euler_tuple(target - effector))
                 if self.supervisor:
                     input("Press Enter to continue...")
                 break
@@ -195,15 +165,14 @@ class Executor:
             time.sleep(0.05)
 
     def start(self):
+        print(self.excavator)
+
         self.adapter.start()
         self.adapter.wait_until_initialized()
         self.adapter.enable_motion()
 
+        print("Machine initialized")
         print("Kinematic tolerance:", self.tolerance)
-        print("Motion profile slew:", 10_000, 12_000)
-        print("Motion profile boom:", 15_000, 12_000)
-        print("Motion profile arm:", 15_000, 12_000)
-        print("Motion profile attachment:", 15_000, 12_000)
 
     def stop(self):
         self.adapter.disable_motion()
@@ -213,7 +182,7 @@ class Executor:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("program", help="program file")
-    parser.add_argument("-n", "--no-supervisor", action="store_true")
+    parser.add_argument("-n", "--no-supervisor", action="store_false")
     parser.add_argument("-t", "--trace", action="store_true")
     parser.add_argument("-c", "--config", default="config.ini", help="config file")
 
@@ -235,7 +204,7 @@ if __name__ == "__main__":
 
     executor = Executor(
         host=f"{host}:{port}",
-        supervisor=~args.no_supervisor,
+        supervisor=args.no_supervisor,
         trace=args.trace,
         **robot,
         **kinematics,

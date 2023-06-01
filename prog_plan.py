@@ -10,7 +10,7 @@ np.set_printoptions(formatter={"float": lambda x: "{0:0.2f}".format(x)})
 
 program = np.load(file="model/default_trainnig_v1.npy")
 
-excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
+excavator = Excavator.from_json(file_path=config["ROBOT_DEFINITION"])
 
 adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
 adapter.start()

@@ -19,7 +19,8 @@ from rich import box
 
 config = get_config()
 
-excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
+# excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
+excavator = Excavator.from_json(file_path="robot/volvo_ec240cl.json")
 adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
 
 
@@ -195,17 +196,16 @@ class EncoderTable:
         table.add_column("Bounds Upper", justify="right")
 
         for joint in excavator.joints:
-            encoder_name = joint.name[:-6]
-            if encoder_name in adapter.encoder:
-                normal = joint.normalize(adapter.encoder[encoder_name]["angle"])
+            if joint.name in adapter.encoder:
+                normal = joint.normalize(adapter.encoder[joint.name]["angle"])
 
                 table.add_row(
                     joint.name,
-                    "{:3.3f}".format(adapter.encoder[encoder_name]["position"]),
+                    "{:3.3f}".format(adapter.encoder[joint.name]["position"]),
                     format_angle(joint.lower_bound)
                     if joint.lower_bound is not None and not np.isinf(joint.lower_bound)
                     else "-",
-                    format_angle(adapter.encoder[encoder_name]["angle"]),
+                    format_angle(adapter.encoder[joint.name]["angle"]),
                     format_percent(normal * 100)
                     if joint.upper_bound is not None and not np.isinf(joint.upper_bound)
                     else "-",
@@ -222,6 +222,7 @@ class OriginGrid:
         grid = Table(box=None, pad_edge=False, show_edge=False, expand=True)
 
         grid.add_column()
+        grid.add_column("Joint Type")
         grid.add_column("X", justify="right", width=5)
         grid.add_column("Y", justify="right", width=5)
         grid.add_column("Z", justify="right", width=5)
@@ -229,9 +230,10 @@ class OriginGrid:
         grid.add_column("Pitch", justify="right", width=20)
         grid.add_column("Yaw", justify="right", width=20)
 
-        for idx, joint in enumerate(excavator.joints):
+        for joint in excavator.joints:
             grid.add_row(
-                (" " * idx) + joint.name,
+                joint.name,
+                joint.type,
                 format_coord(joint.origin_translation[0])
                 if joint.origin_translation is not None
                 else "-",
@@ -250,7 +252,6 @@ class OriginGrid:
                 format_angle(joint.origin_orientation[2])
                 if joint.origin_orientation is not None
                 else "-",
-                style="bold" if joint.type != "fixed" else "",
             )
 
         return grid
@@ -268,33 +269,23 @@ class KinematicGrid:
         grid.add_column("Absolute Pitch", justify="right", width=20)
         grid.add_column("Absolute Yaw", justify="right", width=20)
 
-        import numpy as np
+        for chain in excavator.chains:
+            grid.add_row(chain.name, style="cyan")
 
-        effector = excavator.forward_kinematics2()
-        for idx, joint in enumerate(excavator.joints):
-            grid.add_row(
-                (" " * idx) + joint.name,
-                format_coord(effector[idx][0]),
-                format_coord(effector[idx][1]),
-                format_coord(effector[idx][2]),
-                format_angle(effector[idx][3]),
-                format_angle(effector[idx][4]),
-                format_angle(effector[idx][5]),
-            )
+            effector = chain.opspace_forward_kinematics(result_only=False)
+            for idx, joint in enumerate(chain.joints):
+                grid.add_row(
+                    (" " * idx) + joint.name,
+                    format_coord(effector[idx][0]),
+                    format_coord(effector[idx][1]),
+                    format_coord(effector[idx][2]),
+                    format_angle(effector[idx][3]),
+                    format_angle(effector[idx][4]),
+                    format_angle(effector[idx][5]),
+                    style="bold bright_yellow" if idx == len(chain.joints) - 1 else "",
+                )
 
-        grid.add_row()
-
-        effector = excavator.forward_kinematics2(joint_name="attachment_joint")
-        grid.add_row(
-            "Effector point",
-            format_coord(effector[0]),
-            format_coord(effector[1]),
-            format_coord(effector[2]),
-            format_angle(effector[3]),
-            format_angle(effector[4]),
-            format_angle(effector[5]),
-            style="bold bright_yellow",
-        )
+            grid.add_row()
 
         return grid
 
@@ -315,7 +306,7 @@ layout["origin"].update(
     )
 )
 layout["effector"].update(
-    Panel(KinematicGrid(), title="[magenta3][ Kinematics ]", style="on grey15")
+    Panel(KinematicGrid(), title="[magenta3][ Kinematic Chains ]", style="on grey15")
 )
 
 

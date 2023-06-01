@@ -21,7 +21,7 @@ motion_profile_boom = MotionProfile(15_000, 12_000, tolerance, True)
 motion_profile_arm = MotionProfile(15_000, 12_000, tolerance, False)
 motion_profile_attachment = MotionProfile(15_000, 12_000, tolerance, False)
 
-excavator = Excavator.from_urdf(file_path="urdf/volvo_ec240cl.urdf")
+excavator = Excavator.from_json(file_path="robot/volvo_ec240cl.json")
 
 print(excavator)
 
@@ -44,151 +44,50 @@ excavator.boom = adapter.encoder["boom"]["angle"]
 excavator.arm = adapter.encoder["arm"]["angle"]
 excavator.attachment = adapter.encoder["attachment"]["angle"]
 
-# effector = excavator.forward_kinematics2()
-# print("End effector:", effector)
-
-# print()
-
-effector = excavator.forward_kinematics2(joint_name="attachment_joint")
-print("End effector:", format_euler_tuple(effector))
-
 target = np.array([4.09, 0.89, -2.32])
 
-excavator.inverse_kinematics(target)
+# excavator.inverse_kinematics(target)
 
-print("Target:", target)
+# print("\n")
 
-proj = excavator.get_position_state_projected()
-frame = excavator._calculate_forward_kinematics(proj, joint_name="attachment_joint")[-1][:3]
-print("Projected Euler:", frame)
-print("Projected angle:", proj)
+# effector = excavator.forward_kinematics3(chain_name="articulation_arm")
+# print("End effector1:", format_euler_tuple(effector))
 
-# err = excavator.get_position_error()[0]
-# print("Error:", err)
+# print("Target:", target)
+
+# joint_idx_list = []
+# chain = excavator.get_chain_by_name("articulation_arm")
+# for joint in chain.joints:
+#     joint_idx = excavator._get_joint_index_by_name(joint.name)
+#     joint_idx_list.append(joint_idx)
+
+# proj = excavator.get_position_state_projected()[joint_idx_list]
+# # frame = excavator._calculate_forward_kinematics(proj, joint_name="attachment")[-1][:3]
+# frame = excavator.forward_kinematics3(
+#     chain_name="articulation_arm", joint_parameters=proj
+# )[:3]
+
+# print("Projected Euler:", frame)
+# print("Projected angle:", proj)
+
+print()
+
+chain_arm = excavator.get_chain_by_name("articulation_arm")
+
+forward_kinematics = chain_arm.opspace_forward_kinematics()
+print("PRE Chain arm opsp.FK :", format_euler_tuple(forward_kinematics))
+forward_kinematics_projected = chain_arm.projected_forward_kinematics()
+print("PRE Chain arm proj.FK :", format_euler_tuple(forward_kinematics_projected))
+
+target = np.array([5.56, 0.00, 1.65])
+chain_arm.inverse_kinematics(target)
+
+forward_kinematics = chain_arm.opspace_forward_kinematics()
+print("POS Chain arm opsp.FK :", format_euler_tuple(forward_kinematics))
+forward_kinematics_projected = chain_arm.projected_forward_kinematics()
+print("POS Chain arm proj.FK :", format_euler_tuple(forward_kinematics_projected))
+
 
 adapter.disable_motion()
 adapter.stop()
 sys.exit(0)
-
-### Kinematics test
-
-
-print("Program:")
-for idx, target in enumerate(program):
-    print(f"{idx}", format_euler_tuple(target))
-
-# adapter.disable_motion()
-# adapter.stop()
-# sys.exit(0)
-
-print()
-print("Starting program")
-input("Press Enter to continue...")
-
-
-def move_to_target(target):
-    effector = excavator.forward_kinematics2(joint_name="attachment_joint")
-
-    print("")
-    print("Target   :", format_euler_tuple(target))
-    print("Effector :", format_euler_tuple(effector))
-
-    excavator.inverse_kinematics(target[:3])
-
-    proj_angle = np.sum(excavator.get_position_state_projected()[2:])
-    print("IK: Projected Pitch:", format_angle(proj_angle))
-    abs_error = target[4] - proj_angle
-    print("IK: AbsPitch error:", format_angle(abs_error))
-    rel_pitch_error0 = excavator.attachment + abs_error
-    print("IK: RelPitch error", format_angle(rel_pitch_error0))
-
-    bc = excavator.attachment_joint.is_within_bounds(rel_pitch_error0)
-    print("IK: Is Within bounds:", bc)
-    if not bc:
-        rel_pitch_error0 = excavator.attachment_joint.clip(rel_pitch_error0)
-        print("IK: Clipped angle:", rel_pitch_error0)
-
-    excavator.position_state[1][4] = rel_pitch_error0
-
-    print()
-    input("Press Enter to continue...")
-
-    while True:
-        excavator.frame = adapter.encoder["frame"]["angle"]
-        excavator.boom = adapter.encoder["boom"]["angle"]
-        excavator.arm = adapter.encoder["arm"]["angle"]
-        excavator.attachment = adapter.encoder["attachment"]["angle"]
-
-        print()
-        print("Target:", format_euler_tuple(target))
-
-        rel_error = excavator.get_position_error()[0]
-
-        rel_frame_error = shortest_rotation(rel_error[1])
-        rel_boom_error = rel_error[2]
-        rel_arm_error = rel_error[3]
-        rel_attachment_error = rel_error[4]
-
-        power_setting_slew = motion_profile_slew.proportional_power(rel_frame_error)
-        power_setting_boom = motion_profile_boom.proportional_power(rel_boom_error)
-        power_setting_arm = motion_profile_arm.proportional_power_inverse(rel_arm_error)
-        power_setting = motion_profile_attachment.proportional_power(
-            rel_attachment_error
-        )
-
-        print(
-            "{:<15}".format("Frame"),
-            "  Error: {:>7}".format(format_angle(rel_frame_error)),
-            "  Power: {:>6d}".format(int(power_setting_slew)),
-        )
-        print(
-            "{:<15}".format("Boom"),
-            "  Error: {:>7}".format(format_angle(rel_boom_error)),
-            "  Power: {:>6d}".format(int(power_setting_boom)),
-        )
-        print(
-            "{:<15}".format("Arm"),
-            "  Error: {:>7}".format(format_angle(rel_arm_error)),
-            "  Power: {:>6d}".format(int(power_setting_arm)),
-        )
-        print(
-            "{:<15}".format("Attachment"),
-            "  Error: {:>7}".format(format_angle(rel_attachment_error)),
-            "  Power: {:>6d}".format(int(power_setting)),
-        )
-
-        adapter.change(
-            [
-                (ExcavatorActuator.Slew, int(power_setting_slew)),
-                (ExcavatorActuator.Boom, int(power_setting_boom)),
-                (ExcavatorActuator.Arm, int(power_setting_arm)),
-                (ExcavatorActuator.Attachment, int(power_setting)),
-            ]
-        )
-
-        if (
-            abs(rel_frame_error) < tolerance
-            and abs(rel_boom_error) < tolerance
-            and abs(rel_arm_error) < tolerance
-            and abs(rel_attachment_error) < tolerance
-        ):
-            print()
-            print("Objective reached")
-            input("Press Enter to continue...")
-            break
-
-        time.sleep(0.1)
-
-
-try:
-    adapter.enable_motion()
-
-    # while True:
-    for target in program:
-        move_to_target(target)
-except Exception as e:
-    traceback.print_exception(type(e), e, e.__traceback__)
-finally:
-    adapter.disable_motion()
-    adapter.stop()
-    sys.exit(0)

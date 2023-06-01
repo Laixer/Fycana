@@ -8,10 +8,6 @@ from . import motion
 
 
 class ExcavatorActuator:
-    """
-    Acutators of the excavator machine
-    """
-
     Boom = 0
     Arm = 4
     Attachment = 5
@@ -21,23 +17,12 @@ class ExcavatorActuator:
 
 
 class ExcavatorAdapter(Adapter):
-    """
-    Adapter to remote excavator
-    """
-
     encoder = {}
     engine = {}
     vms = {}
     signal_callback = None
 
     def signal_event(self, signal):
-        """
-        Signal event handler.
-
-        Args:
-            signal (Signal): signal object.
-        """
-
         match signal.address:
             case 0x6B:
                 self._on_boom_signal(signal)
@@ -163,58 +148,54 @@ class ExcavatorAdapter(Adapter):
 
 
 class Excavator(Robot):
-    """
-    A robot excavator
-    """
-
     # TODO: Remove this?
     @property
     def frame_joint(self):
-        return self.get_joint_by_name("frame_joint")
+        return self.get_joint_by_name("frame")
 
     # TODO: Remove this?
     @property
     def boom_joint(self):
-        return self.get_joint_by_name("boom_joint")
+        return self.get_joint_by_name("boom")
 
     # TODO: Remove this?
     @property
     def arm_joint(self):
-        return self.get_joint_by_name("arm_joint")
+        return self.get_joint_by_name("arm")
 
     # TODO: Remove this?
     @property
     def attachment_joint(self):
-        return self.get_joint_by_name("attachment_joint")
+        return self.get_joint_by_name("attachment")
 
     @property
     def frame(self):
-        return self.get_position_state("frame_joint")
+        return self.get_position_state("frame")
 
     @frame.setter
     def frame(self, angle):
-        self.set_position_state("frame_joint", angle)
+        self.set_position_state("frame", angle)
 
     @property
     def boom(self):
-        return self.get_position_state("boom_joint")
+        return self.get_position_state("boom")
 
     @boom.setter
     def boom(self, angle):
-        self.set_position_state("boom_joint", angle)
+        self.set_position_state("boom", angle)
 
     @property
     def arm(self):
-        return self.get_position_state("arm_joint")
+        return self.get_position_state("arm")
 
     @arm.setter
     def arm(self, angle):
-        self.set_position_state("arm_joint", angle)
+        self.set_position_state("arm", angle)
 
     @property
     def attachment(self):
-        return self.get_position_state("attachment_joint")
+        return self.get_position_state("attachment")
 
     @attachment.setter
     def attachment(self, angle):
-        self.set_position_state("attachment_joint", angle)
+        self.set_position_state("attachment", angle)
