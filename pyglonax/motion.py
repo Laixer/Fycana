@@ -19,7 +19,12 @@ class MotionProfile:
         self.lower_bound = lower_bound
         self.inverse = inverse
 
-    def proportional_power(self, value):
+    def power(self, value) -> int:
+        if self.inverse:
+            return int(self.proportional_power_inverse(value))
+        return int(self.proportional_power(value))
+
+    def proportional_power(self, value) -> int:
         if abs(value) > self.lower_bound:
             power = self.offset + min((abs(value) * self.scale), 32_767 - self.offset)
             if value < 0:
@@ -29,7 +34,7 @@ class MotionProfile:
         else:
             return 0
 
-    def proportional_power_inverse(self, value):
+    def proportional_power_inverse(self, value) -> int:
         if abs(value) > self.lower_bound:
             power = value * self.scale
 
