@@ -1,11 +1,5 @@
 import os
 import numpy as np
-from dotenv import load_dotenv, dotenv_values
-
-
-def get_config() -> dict:
-    load_dotenv()
-    return dotenv_values(".env")
 
 
 def numpy3d_to_string(array):

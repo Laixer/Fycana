@@ -29,14 +29,11 @@ class Executor:
         self.articulation_chain = self.excavator.get_chain_by_name("articulation_arm")
 
     def _update_signal(self, signal):
-        if "frame" in self.adapter.encoder:
-            self.excavator.frame = self.adapter.encoder["frame"]["angle"]
-        if "boom" in self.adapter.encoder:
-            self.excavator.boom = self.adapter.encoder["boom"]["angle"]
-        if "arm" in self.adapter.encoder:
-            self.excavator.arm = self.adapter.encoder["arm"]["angle"]
-        if "attachment" in self.adapter.encoder:
-            self.excavator.attachment = self.adapter.encoder["attachment"]["angle"]
+        for joint in self.articulation_chain.joints:
+            if joint.name in self.adapter.encoder:
+                self.excavator.set_position_state(
+                    joint.name, self.adapter.encoder[joint.name]["angle"]
+                )
 
     def solve_target(self, step, target):
         effector = self.articulation_chain.opspace_forward_kinematics()

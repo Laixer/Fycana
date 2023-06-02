@@ -169,30 +169,6 @@ class Excavator(Robot):
         return self.get_joint_by_name("attachment")
 
     @property
-    def frame(self):
-        return self.get_position_state("frame")
-
-    @frame.setter
-    def frame(self, angle):
-        self.set_position_state("frame", angle)
-
-    @property
-    def boom(self):
-        return self.get_position_state("boom")
-
-    @boom.setter
-    def boom(self, angle):
-        self.set_position_state("boom", angle)
-
-    @property
-    def arm(self):
-        return self.get_position_state("arm")
-
-    @arm.setter
-    def arm(self, angle):
-        self.set_position_state("arm", angle)
-
-    @property
     def attachment(self):
         return self.get_position_state("attachment")
 

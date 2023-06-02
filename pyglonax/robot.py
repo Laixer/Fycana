@@ -1,10 +1,7 @@
 import json
 import numpy as np
-import networkx as nx
 import scipy as sp
 from scipy import optimize
-
-from xml.etree import ElementTree as ET
 
 from . import geom, util, motion
 from .util import format_euler_tuple
@@ -203,14 +200,24 @@ class Chain:
         return s
 
 
+class Device:
+    def __init__(self, name, id, type):
+        self.name = name
+        self.id = id
+        self.type = type
+
+    def __str__(self):
+        return f"Device={self.name}, Id={self.id}, Type={self.type}"
+
+
 class Robot:
     def __init__(self, name, model=None):
         self.name = name
         self.model = model
         self.joints = list()  # TODO: Replace with graph
         self.chains = list()
+        self.devices = list()
         self.position_state = np.zeros((1, 0))
-        self.body = nx.DiGraph()
 
     @classmethod
     def from_json(cls, file_path):
@@ -224,6 +231,12 @@ class Robot:
         name = definition_file["name"]
         model = definition_file["model"]
         robot = cls(name, model)
+        devices = definition_file["devices"]
+        for device in devices:
+            device_name = device["name"]
+            device_id = device["id"]
+            device_type = device["type"]
+            robot.devices.append(Device(device_name, device_id, device_type))
         body = definition_file["body"]
         chains = body["chain"]
         joints = body["joint"]
@@ -334,6 +347,8 @@ class Robot:
     # TODO: Clean up
     def __str__(self) -> str:
         s = f"Robot={self.name}"
+        for device in self.devices:
+            s += f"\n  {device}"
         if self.model is not None:
             s += f", Model={self.model}"
         s += f", Chains={len(self.chains)}, Joints={len(self.joints)}"
