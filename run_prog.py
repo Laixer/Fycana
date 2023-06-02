@@ -268,6 +268,12 @@ if __name__ == "__main__":
 
 #             # target = np.array([4.00, -1.29, 2.7, 0.0, 0.0, 0])
 
+#             for joint in self.articulation_chain.joints:
+#                 if joint.name in self.adapter.encoder:
+#                     self.excavator.set_position_state(
+#                         joint.name, self.adapter.encoder[joint.name]["angle"]
+#                     )
+
 #             executor.solve_target(idx, target)
 #             idx += 1
 #     except KeyboardInterrupt:

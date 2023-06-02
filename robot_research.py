@@ -39,10 +39,11 @@ adapter.wait_until_initialized()
 
 print("Machine initialized")
 
-excavator.frame = adapter.encoder["frame"]["angle"]
-excavator.boom = adapter.encoder["boom"]["angle"]
-excavator.arm = adapter.encoder["arm"]["angle"]
-excavator.attachment = adapter.encoder["attachment"]["angle"]
+
+excavator.set_position_state("frame", adapter.encoder["frame"]["angle"])
+excavator.set_position_state("boo", adapter.encoder["boom"]["angle"])
+excavator.set_position_state("arm", adapter.encoder["arm"]["angle"])
+excavator.set_position_state("attachment", adapter.encoder["attachment"]["angle"])
 
 target = np.array([4.09, 0.89, -2.32])
 
