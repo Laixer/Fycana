@@ -6,7 +6,7 @@ import math
 import numpy as np
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter
-from pyglonax.util import get_config
+
 
 from rich.table import Table
 from rich.live import Live
@@ -17,11 +17,9 @@ from rich.align import Align
 from rich.text import Text
 from rich import box
 
-config = get_config()
 
-# excavator = Excavator.from_urdf(file_path=config["ROBOT_DEFINITION"])
 excavator = Excavator.from_json(file_path="robot/volvo_ec240cl.json")
-adapter = ExcavatorAdapter(host=config["GLONAX_HOST"])
+adapter = ExcavatorAdapter(host="localhost:50051")
 
 
 def format_angle(value=None) -> Text:
