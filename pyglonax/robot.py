@@ -116,7 +116,23 @@ class Joint:
         return value
 
     def __str__(self):
-        return f"Joint={self.name}, Type={self.type}, OriginTranslation={util.numpy3d_to_string(self.origin_translation)}, OriginOrientation={util.numpy3d_to_string(self.origin_orientation)}, Rotation={util.numpy3d_to_string(self.rotation)}, Translation={util.numpy3d_to_string(self.translation)}, Bounds={self.bounds}"
+        origin_translation = self.origin_translation
+        if self.origin_translation is None:
+            origin_translation = np.array([0.0, 0.0, 0.0])
+
+        origin_orientation = self.origin_orientation
+        if self.origin_orientation is None:
+            origin_orientation = np.array([0.0, 0.0, 0.0])
+
+        translation = self.translation
+        if self.translation is None:
+            translation = np.array([0.0, 0.0, 0.0])
+
+        rotation = self.rotation
+        if self.rotation is None:
+            rotation = np.array([0.0, 0.0, 0.0])
+
+        return f"Joint={self.name}, Type={self.type}, Origin={format_euler_tuple(np.concatenate((origin_translation, origin_orientation)))}, Transformation={format_euler_tuple(np.concatenate((translation, rotation)))}, Bounds={self.bounds}"
 
 
 class Chain:

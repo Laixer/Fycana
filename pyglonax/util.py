@@ -2,14 +2,6 @@ import os
 import numpy as np
 
 
-# Obsolete
-def numpy3d_to_string(array):
-    """Convert a numpy array to a string"""
-    if array is None:
-        return "None"
-    return f"[{array[0]:.2f}, {array[1]:.2f}, {array[2]:.2f}]"
-
-
 def format_angle(value):
     return "{:.2f}°".format(np.rad2deg(value))
 
