@@ -4,6 +4,7 @@ import os
 import time
 import math
 import numpy as np
+import configparser
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter
 
@@ -18,8 +19,16 @@ from rich.text import Text
 from rich import box
 
 
-excavator = Excavator.from_json(file_path="robot/volvo_ec240cl.json")
-adapter = ExcavatorAdapter(host="localhost:50051")
+config = configparser.ConfigParser()
+config.read("config.ini")
+
+host = config["glonax"]["host"]
+port = config["glonax"]["port"]
+
+definition_file = config["robot"]["definition_file"]
+
+excavator = Excavator.from_json(file_path=config["robot"]["definition_file"])
+adapter = ExcavatorAdapter(host=f"{host}:{port}")
 
 
 def format_angle(value=None) -> Text:
