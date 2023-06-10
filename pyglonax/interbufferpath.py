@@ -1,6 +1,7 @@
+import networkx as nx
+
 from pyglonax.pathplan import PathFinding
 
-import networkx as nx
 from shapely import Point, LineString
 
 
