@@ -3,6 +3,8 @@
 import os
 import sys
 import json
+import random
+import time
 import traceback
 import numpy as np
 import argparse
@@ -10,12 +12,10 @@ import configparser
 
 
 from pyglonax.executor import ExcavatorExecutor
-from pyglonax.util import format_euler_tuple
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("program", help="program file")
     parser.add_argument("-n", "--no-supervisor", action="store_false")
     parser.add_argument("-t", "--trace", action="store_true")
     parser.add_argument("-c", "--config", default="config.ini", help="config file")
@@ -27,11 +27,6 @@ if __name__ == "__main__":
 
     host = config["glonax"]["host"]
     port = config["glonax"]["port"]
-
-    program_file = open(args.program)
-    json_file = json.load(program_file)
-    program = np.array(json_file)
-    program_file.close()
 
     robot = dict(config["robot"])
     kinematics = dict(config["kinematics"])
@@ -46,13 +41,35 @@ if __name__ == "__main__":
     try:
         executor.start()
 
-        print()
-        print("Program:")
-        for idx, target in enumerate(program):
-            print(f"{idx}", format_euler_tuple(target))
+        frame_device = executor.excavator.frame_joint.device
+        boom_device = executor.excavator.boom_joint.device
+        arm_device = executor.excavator.arm_joint.device
+        attachment_device = executor.excavator.attachment_joint.device
 
-        for idx, target in enumerate(program):
+        idx = 0
+        while True:
+            random_frame = random.uniform(
+                frame_device.lower_bound, frame_device.upper_bound
+            )
+            random_boom = random.uniform(
+                boom_device.lower_bound, boom_device.upper_bound
+            )
+            random_arm = random.uniform(arm_device.lower_bound, arm_device.upper_bound)
+            random_attachment = random.uniform(
+                attachment_device.lower_bound, attachment_device.upper_bound
+            )
+
+            target = executor.articulation_chain.forward_kinematics(
+                joint_parameters=[
+                    random_frame,
+                    random_boom - 1.047,
+                    random_arm,
+                    random_attachment - 0.962,
+                ]
+            )
+
             executor.solve_target(idx, target)
+            idx += 1
     except KeyboardInterrupt:
         pass
     except Exception as e:
