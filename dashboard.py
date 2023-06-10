@@ -13,8 +13,6 @@ from rich.table import Table
 from rich.live import Live
 from rich.layout import Layout
 from rich.panel import Panel
-from rich.console import Group
-from rich.align import Align
 from rich.text import Text
 from rich import box
 
@@ -29,6 +27,19 @@ definition_file = config["robot"]["definition_file"]
 
 excavator = Excavator.from_json(file_path=config["robot"]["definition_file"])
 adapter = ExcavatorAdapter(host=f"{host}:{port}")
+
+articulation_chain = excavator.get_chain_by_name("articulation_arm")
+
+
+def _update_signal(_):
+    for joint in articulation_chain.joints:
+        if joint.name in adapter.encoder:
+            excavator.set_position_state(
+                joint.name, adapter.encoder[joint.name]["angle"]
+            )
+
+
+adapter.on_signal_update(_update_signal)
 
 
 def format_angle(value=None) -> Text:
@@ -322,12 +333,6 @@ with Live(layout, refresh_per_second=20) as live:
 
     try:
         while True:
-            if adapter.is_initialized():
-                excavator.frame = adapter.encoder["frame"]["angle"]
-                excavator.boom = adapter.encoder["boom"]["angle"]
-                excavator.arm = adapter.encoder["arm"]["angle"]
-                excavator.attachment = adapter.encoder["attachment"]["angle"]
-
             if adapter.status == adapter.ConnectionState.DISCONNECTED:
                 adapter.restart()
 
