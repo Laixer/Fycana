@@ -57,6 +57,7 @@ class Joint:
         translation=None,
         bounds=np.array([-np.inf, np.inf]),
         motion_profile=None,
+        device=None,
     ):
         self.name = name
         self.type = type
@@ -67,6 +68,7 @@ class Joint:
         self.translation = translation
         self.bounds = bounds
         self.motion_profile = motion_profile
+        self.device = device
 
     @property
     def lower_bound(self):
@@ -217,10 +219,25 @@ class Chain:
 
 
 class Device:
-    def __init__(self, name, id, type):
+    def __init__(self, name, id, type, options):
         self.name = name
         self.id = id
         self.type = type
+        self.options = options
+
+    @property
+    def lower_bound(self):
+        """Return the lower bound of the encoder"""
+        if self.type.startswith("rot_abs"):
+            return self.options["lower"] if "lower" in self.options else 0.0
+        raise ValueError(f"Device type {self.type} does not have a lower bound")
+
+    @property
+    def upper_bound(self):
+        """Return the lower bound of the encoder"""
+        if self.type.startswith("rot_abs"):
+            return self.options["upper"] if "upper" in self.options else 0.0
+        raise ValueError(f"Device type {self.type} does not have a upper bound")
 
     def __str__(self):
         return f"Device={self.name}, Id={self.id}, Type={self.type}"
@@ -252,13 +269,24 @@ class Robot:
             device_name = device["name"]
             device_id = device["id"]
             device_type = device["type"]
-            robot.devices.append(Device(device_name, device_id, device_type))
+            device_options = None
+            if "options" in device:
+                device_options = device["options"]
+            robot.devices.append(
+                Device(device_name, device_id, device_type, device_options)
+            )
         body = definition_file["body"]
         chains = body["chain"]
         joints = body["joint"]
         for joint in joints:
             joint_name = joint["name"]
             joint_type = joint["type"]
+            joint_device = None
+            if "device" in joint:
+                joint_device_id = joint["device"]
+                for device in robot.devices:
+                    if device.name == joint_device_id:
+                        joint_device = device
             joint_origin_translation = None
             joint_origin_orientation = None
             if "origin" in joint:
@@ -309,6 +337,7 @@ class Robot:
                 translation=joint_translation,
                 bounds=bounds,
                 motion_profile=motion_profile,
+                device=joint_device,
             )
             robot.joints.append(joint)
         for chain in chains:
