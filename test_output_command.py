@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 
 import time
+import logging
+import configparser
 
 from pyglonax.motion import POWER_MAX, POWER_MIN
 from pyglonax.excavator import ExcavatorAdapter, ExcavatorActuator
-from pyglonax.util import get_config
 
-config = get_config()
 
 SLEEP_TIME = 1
+
+config = configparser.ConfigParser()
+config.read("config.ini")
+
+host = config["glonax"]["host"]
+port = config["glonax"]["port"]
 
 
 class TestOutputCommand:
@@ -16,8 +22,8 @@ class TestOutputCommand:
     Test the machine
     """
 
-    def __init__(self, host):
-        self.machine = ExcavatorAdapter(host=host)
+    def __init__(self, host, port):
+        self.machine = ExcavatorAdapter(host, port)
 
     def stop(self):
         self.machine.disable_motion()
@@ -166,7 +172,7 @@ class TestOutputCommand:
 
 
 if __name__ == "__main__":
-    program = TestOutputCommand(host=config["GLONAX_HOST"])
+    program = TestOutputCommand(host, port)
     try:
         program.start()
     except KeyboardInterrupt:

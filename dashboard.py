@@ -26,7 +26,7 @@ port = config["glonax"]["port"]
 definition_file = config["robot"]["definition_file"]
 
 excavator = Excavator.from_json(file_path=config["robot"]["definition_file"])
-adapter = ExcavatorAdapter(host=f"{host}:{port}")
+adapter = ExcavatorAdapter(host, port)
 
 articulation_chain = excavator.get_chain_by_name("articulation_arm")
 
