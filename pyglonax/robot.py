@@ -252,6 +252,7 @@ class Robot:
         self.devices = list()
         self.position_state = np.zeros((1, 0))
 
+    # TODO: This should go in the constructor
     @classmethod
     def from_json(cls, file_path):
         """Create a robot from a JSON object"""
@@ -297,11 +298,10 @@ class Robot:
             joint_rotation = None
             joint_translation = None
             if "axis" in joint:
-                match joint_type:
-                    case "revolute" | "continuous":
-                        joint_rotation = np.array(joint["axis"], dtype=np.float64)
-                    case "prismatic":
-                        joint_translation = np.array(joint["axis"], dtype=np.float64)
+                if joint_type == "revolute" or joint_type == "continuous":
+                    joint_rotation = np.array(joint["axis"], dtype=np.float64)
+                elif joint_type == "prismatic":
+                    joint_translation = np.array(joint["axis"], dtype=np.float64)
             bounds = np.array([-np.inf, np.inf])
             if "limit" in joint:
                 if joint_type == "revolute" or joint_type == "prismatic":
