@@ -1,8 +1,8 @@
-markdown-it-py==2.2.0
+markdown-it-py==3.0.0
 mdurl==0.1.2
 networkx==3.1
-numpy==1.24.3
-Pygments==2.15.1
-python-dotenv==1.0.0
-rich==13.3.5
+numpy==1.24.4
+Pygments==2.16.1
+rich==13.5.2
 scipy==1.10.1
+typing-extensions==4.7.1
