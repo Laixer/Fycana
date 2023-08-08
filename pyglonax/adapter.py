@@ -57,6 +57,7 @@ class Adapter:
             if not data:
                 break
 
+            # TODO: Read until buffer is empty
             # TOOD: Move into transport layer {
             header_offset = 0
             for i in range(len(data) - 3):

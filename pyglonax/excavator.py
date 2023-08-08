@@ -47,21 +47,22 @@ class ExcavatorAdapter(Adapter):
         self.signal_callback = func
 
     def _on_host_metric(self, signal):
+        # TODO: Use hex addresses for functions
         if signal.function == 382:
             self.vms["memory"] = signal.value
-            logging.debug(f"Memory: {signal.value}%")
+            logging.debug(f"Host memory: {signal.value}%")
         elif signal.function == 383:
             self.vms["swap"] = signal.value
-            logging.debug(f"Swap: {signal.value}%")
+            logging.debug(f"Host swap: {signal.value}%")
         elif signal.function == 593:
             self.vms["cpu_1"] = signal.value
-            logging.debug(f"CPU 1: {signal.value}%")
+            logging.debug(f"Host CPU 1: {signal.value}%")
         elif signal.function == 594:
             self.vms["cpu_5"] = signal.value
-            logging.debug(f"CPU 2: {signal.value}%")
+            logging.debug(f"Host CPU 2: {signal.value}%")
         elif signal.function == 595:
             self.vms["cpu_15"] = signal.value
-            logging.debug(f"CPU 3: {signal.value}%")
+            logging.debug(f"Host CPU 3: {signal.value}%")
         else:
             logging.warn(f"Unknown host metric: {signal}")
         if self.signal_callback:
@@ -72,17 +73,17 @@ class ExcavatorAdapter(Adapter):
             self.gnss["lat"] = signal.value[0]
             self.gnss["long"] = signal.value[1]
             logging.debug(
-                f"Coordinates: (Lat: {signal.value[0]}, Long: {signal.value[1]})"
+                f"GNSS Coordinates: (Lat: {signal.value[0]}, Long: {signal.value[1]})"
             )
         elif signal.function == 1:
             self.gnss["altitude"] = signal.value
-            logging.debug(f"Altitude: {signal.value}")
+            logging.debug(f"GNSS Altitude: {signal.value}")
         elif signal.function == 2:
             self.gnss["speed"] = signal.value
-            logging.debug(f"Speed: {signal.value}")
+            logging.debug(f"GNSS Speed: {signal.value}")
         elif signal.function == 10:
             self.gnss["satellites"] = signal.value
-            logging.debug(f"Satellites: {signal.value}")
+            logging.debug(f"GNSS Satellites: {signal.value}")
         else:
             logging.warn(f"Unknown gnss metric: {signal}")
         if self.signal_callback:
@@ -91,13 +92,13 @@ class ExcavatorAdapter(Adapter):
     def _on_engine_signal(self, signal):
         if signal.function == 0:
             self.engine["rpm"] = signal.value
-            logging.debug(f"RPM: {signal.value}")
+            logging.debug(f"Engine RPM: {signal.value}")
         elif signal.function == 1:
             self.engine["driver_demand"] = signal.value
-            logging.debug(f"Driver demand: {signal.value}%")
+            logging.debug(f"Engine Driver demand: {signal.value}%")
         elif signal.function == 2:
             self.engine["actual_engine"] = signal.value
-            logging.debug(f"Actual engine: {signal.value}%")
+            logging.debug(f"Engine Actual engine: {signal.value}%")
         else:
             logging.warn(f"Unknown engine metric: {signal}")
         if self.signal_callback:
