@@ -21,7 +21,9 @@ class ExcavatorExecutor:
     def _update_signal(self, _):
         for joint in self.articulation_chain.joints:
             if joint.name in self.adapter.encoder:
-                self.excavator.set_position_state(joint.name, self.adapter.encoder[joint.name]["angle"])
+                self.excavator.set_position_state(
+                    joint.name, self.adapter.encoder[joint.name]["angle"]
+                )
 
     def solve_target(self, step, target):
         effector = self.articulation_chain.opspace_forward_kinematics()
@@ -31,6 +33,8 @@ class ExcavatorExecutor:
         print("Target        : ", format_euler_tuple(target))
         print("Effector      : ", format_euler_tuple(effector))
         print("Opspace Error : ", format_euler_tuple(target - effector))
+
+        # TODO: Pathplanning here
 
         self.articulation_chain.inverse_kinematics(target[:3])
 

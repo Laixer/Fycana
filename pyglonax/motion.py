@@ -1,8 +1,4 @@
-import grpc
-import logging
-
-from . import vms_pb2
-from . import vms_pb2_grpc
+from enum import IntEnum
 
 """ Maximum power setting. """
 POWER_MAX = 32_000
@@ -10,6 +6,32 @@ POWER_MAX = 32_000
 POWER_NEUTRAL = 0
 """ Minimum power setting """
 POWER_MIN = -32_000
+
+
+class Motion:
+    PROTOCOL_MESSAGE = 0x20
+
+    class MotionType(IntEnum):
+        STOP_ALL = 0x00
+        RESUME_ALL = 0x01
+        STRAIGHT_DRIVE = 0x05
+        CHANGE = 0x10
+
+    def __init__(self, type, changes=[]):
+        self.type = type
+        self._changes = changes
+
+    def to_bytes(self):
+        buffer = bytearray()
+
+        buffer.append(self.type)
+        buffer.append(len(self._changes))
+
+        for actuator, value in self._changes:
+            buffer += bytearray(actuator.to_bytes(2, byteorder="big", signed=False))
+            buffer += bytearray(value.to_bytes(2, byteorder="big", signed=True))
+
+        return buffer
 
 
 class MotionProfile:
