@@ -202,6 +202,45 @@ class VMSPanel:
         return Panel(grid, title="[magenta3][ VMS ]", style="on grey11")
 
 
+class GNSSPanel:
+    def __rich__(self) -> Panel:
+        grid = Table.grid(expand=True)
+
+        grid.add_column(ratio=1)
+        grid.add_column(justify="right")
+
+        if "lat" in adapter.gnss and "long" in adapter.gnss:
+            text = Text()
+            text.append(
+                "{:.5f}, {:.5f}".format(adapter.gnss["lat"], adapter.gnss["long"]),
+                "white",
+            )
+
+            grid.add_row("Coordinates", text)
+        else:
+            grid.add_row("Coordinates")
+
+        if "altitude" in adapter.gnss:
+            text = Text()
+            text.append("{:.1f}".format(adapter.gnss["altitude"]), "white")
+            text.append("m", style="bright_black")
+
+            grid.add_row("Altitude", text)
+        else:
+            grid.add_row("Altitude")
+
+        if "speed" in adapter.gnss:
+            text = Text()
+            text.append("{:.1f}".format(adapter.gnss["speed"]), "white")
+            text.append("m/s", style="bright_black")
+
+            grid.add_row("Speed", text)
+        else:
+            grid.add_row("Speed")
+
+        return Panel(grid, title="[magenta3][ GNSS ]", style="on grey11")
+
+
 class EncoderTable:
     def __rich__(self):
         table = Table(box=box.MINIMAL, pad_edge=False, show_edge=False, expand=True)
@@ -315,6 +354,7 @@ layout["encoder"].update(
 )
 layout["engine"].update(EnginePanel())
 layout["vms"].update(VMSPanel())
+layout["location"].update(GNSSPanel())
 layout["footer"].update(Footer())
 layout["origin"].update(
     Panel(

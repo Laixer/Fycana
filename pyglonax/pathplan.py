@@ -1,4 +1,4 @@
-from shapely import Point, LineString, box
+from shapely import LineString
 
 
 class PathFinding:
