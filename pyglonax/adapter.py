@@ -137,21 +137,27 @@ class Adapter:
         proto_bytes = build_protocol(0x10, bytearray(b"Woei"))
         self.socket.sendall(proto_bytes)
 
-    def _commit(self, motion):
-        proto_bytes = build_protocol(Motion.PROTOCOL_MESSAGE, motion.to_bytes())
+    def _shutdown(self):
+        proto_bytes = build_protocol(0x11, bytearray())
         self.socket.sendall(proto_bytes)
 
     def change(self, motion_list):
         """Changes motion"""
-        self._commit(Motion(Motion.MotionType.CHANGE, motion_list))
+        motion = Motion(Motion.MotionType.CHANGE, motion_list)
+        proto_bytes = build_protocol(Motion.PROTOCOL_MESSAGE, motion.to_bytes())
+        self.socket.sendall(proto_bytes)
 
     def disable_motion(self):
         """Disables motion"""
-        self._commit(Motion(Motion.MotionType.STOP_ALL))
+        motion = Motion(Motion.MotionType.STOP_ALL)
+        proto_bytes = build_protocol(Motion.PROTOCOL_MESSAGE, motion.to_bytes())
+        self.socket.sendall(proto_bytes)
 
     def enable_motion(self):
         """Enables motion"""
-        self._commit(Motion(Motion.MotionType.RESUME_ALL))
+        motion = Motion(Motion.MotionType.RESUME_ALL)
+        proto_bytes = build_protocol(Motion.PROTOCOL_MESSAGE, motion.to_bytes())
+        self.socket.sendall(proto_bytes)
 
     def restart(self):
         """Restarts the machine"""
@@ -168,6 +174,7 @@ class Adapter:
     def stop(self):
         """Stops the machine"""
         logging.debug("Stopping machine")
+        self._shutdown()
         self._event.set()
         self.socket.close()
         self._signal_thread.join()
