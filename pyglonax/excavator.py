@@ -20,57 +20,86 @@ class ExcavatorAdapter(Adapter):
     encoder = {}
     engine = {}
     vms = {}
+    gnss = {}
     signal_callback = None
 
     def signal_event(self, signal):
-        match signal.address:
-            case 0x6B:
-                self._on_boom_signal(signal)
-            case 0x6C:
-                self._on_arm_signal(signal)
-            case 0x6A:
-                self._on_frame_signal(signal)
-            case 0x6D:
-                self._on_attachment_signal(signal)
-            case 0x0:
-                self._on_engine_signal(signal)
-            case 0x9E:
-                self._on_host_metric(signal)
-            case _:
-                logging.debug("Unknown signal: %s", signal)
+        # FUTURE: Use match statement
+        if signal.address == 0x6B:
+            self._on_boom_signal(signal)
+        elif signal.address == 0x6C:
+            self._on_arm_signal(signal)
+        elif signal.address == 0x6A:
+            self._on_frame_signal(signal)
+        elif signal.address == 0x6D:
+            self._on_attachment_signal(signal)
+        elif signal.address == 0x0:
+            self._on_engine_signal(signal)
+        elif signal.address == 0x9E:
+            self._on_host_metric(signal)
+        # TODO: GNSS has address 0x01, which is not correct
+        elif signal.address == 0x01:
+            self._on_gnss_metric(signal)
+        else:
+            logging.debug("Unknown signal: %s", signal)
 
     def on_signal_update(self, func):
         self.signal_callback = func
 
     def _on_host_metric(self, signal):
         if signal.function == 382:
-            self.vms["memory"] = signal.percent
-            logging.debug(f"Memory: {signal.percent}%")
-        if signal.function == 383:
-            self.vms["swap"] = signal.percent
-            logging.debug(f"Swap: {signal.percent}%")
-        if signal.function == 593:
-            self.vms["cpu_1"] = signal.percent
-            logging.debug(f"CPU 1: {signal.percent}%")
-        if signal.function == 594:
-            self.vms["cpu_5"] = signal.percent
-            logging.debug(f"CPU 2: {signal.percent}%")
-        if signal.function == 595:
-            self.vms["cpu_15"] = signal.percent
-            logging.debug(f"CPU 3: {signal.percent}%")
+            self.vms["memory"] = signal.value
+            logging.debug(f"Memory: {signal.value}%")
+        elif signal.function == 383:
+            self.vms["swap"] = signal.value
+            logging.debug(f"Swap: {signal.value}%")
+        elif signal.function == 593:
+            self.vms["cpu_1"] = signal.value
+            logging.debug(f"CPU 1: {signal.value}%")
+        elif signal.function == 594:
+            self.vms["cpu_5"] = signal.value
+            logging.debug(f"CPU 2: {signal.value}%")
+        elif signal.function == 595:
+            self.vms["cpu_15"] = signal.value
+            logging.debug(f"CPU 3: {signal.value}%")
+        else:
+            logging.warn(f"Unknown host metric: {signal}")
+        if self.signal_callback:
+            self.signal_callback(signal)
+
+    def _on_gnss_metric(self, signal):
+        if signal.function == 0:
+            self.gnss["lat"] = signal.value[0]
+            self.gnss["long"] = signal.value[1]
+            logging.debug(
+                f"Coordinates: (Lat: {signal.value[0]}, Long: {signal.value[1]})"
+            )
+        elif signal.function == 1:
+            self.gnss["altitude"] = signal.value
+            logging.debug(f"Altitude: {signal.value}")
+        elif signal.function == 2:
+            self.gnss["speed"] = signal.value
+            logging.debug(f"Speed: {signal.value}")
+        elif signal.function == 10:
+            self.gnss["satellites"] = signal.value
+            logging.debug(f"Satellites: {signal.value}")
+        else:
+            logging.warn(f"Unknown gnss metric: {signal}")
         if self.signal_callback:
             self.signal_callback(signal)
 
     def _on_engine_signal(self, signal):
         if signal.function == 0:
-            self.engine["rpm"] = signal.rpm
-            logging.debug(f"RPM: {signal.rpm}")
-        if signal.function == 1:
-            self.engine["driver_demand"] = signal.percent
-            logging.debug(f"Driver demand: {signal.percent}%")
-        if signal.function == 2:
-            self.engine["actual_engine"] = signal.percent
-            logging.debug(f"Actual engine: {signal.percent}%")
+            self.engine["rpm"] = signal.value
+            logging.debug(f"RPM: {signal.value}")
+        elif signal.function == 1:
+            self.engine["driver_demand"] = signal.value
+            logging.debug(f"Driver demand: {signal.value}%")
+        elif signal.function == 2:
+            self.engine["actual_engine"] = signal.value
+            logging.debug(f"Actual engine: {signal.value}%")
+        else:
+            logging.warn(f"Unknown engine metric: {signal}")
         if self.signal_callback:
             self.signal_callback(signal)
 
@@ -78,9 +107,11 @@ class ExcavatorAdapter(Adapter):
         if "frame" not in self.encoder:
             self.encoder["frame"] = {}
         if signal.function == 0:
-            self.encoder["frame"]["position"] = signal.angle
-            self.encoder["frame"]["angle"] = signal.angle
-            logging.debug(f"Frame position: {signal.angle:.3f}")
+            self.encoder["frame"]["position"] = signal.value
+            self.encoder["frame"]["angle"] = signal.value
+            logging.debug(f"Frame position: {signal.value:.3f}")
+        else:
+            logging.warn(f"Unknown frame metric: {signal}")
         if self.signal_callback:
             self.signal_callback(signal)
 
@@ -88,9 +119,11 @@ class ExcavatorAdapter(Adapter):
         if "boom" not in self.encoder:
             self.encoder["boom"] = {}
         if signal.function == 0:
-            self.encoder["boom"]["position"] = signal.angle
-            self.encoder["boom"]["angle"] = signal.angle - 1.047
-            logging.debug(f"Boom position: {signal.angle:.3f}")
+            self.encoder["boom"]["position"] = signal.value
+            self.encoder["boom"]["angle"] = signal.value - 1.047
+            logging.debug(f"Boom position: {signal.value:.3f}")
+        else:
+            logging.warn(f"Unknown boom metric: {signal}")
         if self.signal_callback:
             self.signal_callback(signal)
 
@@ -98,9 +131,11 @@ class ExcavatorAdapter(Adapter):
         if "arm" not in self.encoder:
             self.encoder["arm"] = {}
         if signal.function == 0:
-            self.encoder["arm"]["position"] = signal.angle
-            self.encoder["arm"]["angle"] = signal.angle
-            logging.debug(f"Arm position: {signal.angle:.3f}")
+            self.encoder["arm"]["position"] = signal.value
+            self.encoder["arm"]["angle"] = signal.value
+            logging.debug(f"Arm position: {signal.value:.3f}")
+        else:
+            logging.warn(f"Unknown arm metric: {signal}")
         if self.signal_callback:
             self.signal_callback(signal)
 
@@ -108,9 +143,11 @@ class ExcavatorAdapter(Adapter):
         if "attachment" not in self.encoder:
             self.encoder["attachment"] = {}
         if signal.function == 0:
-            self.encoder["attachment"]["position"] = signal.angle
-            self.encoder["attachment"]["angle"] = signal.angle - 0.962
-            logging.debug(f"Attachment position: {signal.angle:.3f}")
+            self.encoder["attachment"]["position"] = signal.value
+            self.encoder["attachment"]["angle"] = signal.value - 0.962
+            logging.debug(f"Attachment position: {signal.value:.3f}")
+        else:
+            logging.warn(f"Unknown attachment metric: {signal}")
         if self.signal_callback:
             self.signal_callback(signal)
 

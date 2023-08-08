@@ -1,12 +1,27 @@
 import logging
 import time
-import grpc
+import socket
 import threading
-
 from enum import Enum
 
+from .signal import Signal
+from .motion import Motion
 
-from . import vms_pb2, vms_pb2_grpc
+
+# TODO: Move to transport.py or protocol.py or something
+def build_protocol(message, bytes):
+    PROTOCOL_HEADER = [76, 88, 82]
+    PROTOCOL_VERSION = 0x1
+
+    buffer = bytearray(PROTOCOL_HEADER)
+    buffer.append(PROTOCOL_VERSION)
+    buffer.append(message)
+
+    length = len(bytes)
+    buffer += bytearray(length.to_bytes(2, byteorder="big", signed=True))
+    buffer += bytes
+
+    return buffer
 
 
 class Adapter:
@@ -37,27 +52,56 @@ class Adapter:
     def _on_signal(self):
         logging.debug("Listening for incoming signals")
 
-        try:
-            for signal in self._stub.ListenSignal(vms_pb2.Empty()):
-                if self._event.is_set():
-                    break
+        while not self._event.is_set():
+            data = self.socket.recv(2048)
+            if not data:
+                break
 
-                self.last_signal = time.time()
-                self.status = self.ConnectionState.CONNECTED
-                self.signal_event(signal)
-        except grpc.RpcError as e:
-            match e.code():
-                case grpc.StatusCode.UNAVAILABLE:
-                    logging.error("Unable to connect to remote machine: %s", self._host)
-                case grpc.StatusCode.CANCELLED:
-                    logging.debug("Signal listener cancelled")
-                case _:
-                    logging.error("Error: %s", e.code())
+            # TOOD: Move into transport layer {
+            header_offset = 0
+            for i in range(len(data) - 3):
+                if data[i] == 76:
+                    if data[i + 1] == 88:
+                        if data[i + 2] == 82:
+                            header_offset = i + 3
+                            break
+
+            version = data[header_offset]
+            if version != 0x1:
+                print("Invalid version", version)
+                continue
+            header_offset += 1
+
+            message = data[header_offset]
+            if message != 0x31:  # 0x31 = Signal
+                print("Invalid message", message)
+                continue
+            header_offset += 1
+
+            payload_length = int.from_bytes(
+                data[header_offset : header_offset + 2], byteorder="big", signed=False
+            )
+            if payload_length > 4096:
+                print("Invalid payload length", payload_length)
+                continue
+            header_offset += 2
+
+            if header_offset + payload_length > len(data):
+                print("Buffer not complete")
+                continue
+            # TOOD: Move into transport layer }
+
+            payload = data[header_offset : header_offset + payload_length]
+            signal = Signal.from_bytes(payload)
+
+            self.last_signal = time.time()
+            self.status = self.ConnectionState.CONNECTED
+            self.signal_event(signal)
 
         self.status = self.ConnectionState.DISCONNECTED
         logging.debug("Signal listener stopped")
 
-    def __init__(self, host="localhost:50051"):
+    def __init__(self, host="localhost", port=30051):
         """
         Initializes the excavator interface.
 
@@ -65,11 +109,17 @@ class Adapter:
             host (str): remote machine host.
         """
         self._host = host
+        if isinstance(port, str):
+            self._port = int(port)
+        else:
+            self._port = port
         self._setup()
 
     def _setup(self):
-        self._channel = grpc.insecure_channel(self._host)
-        self._stub = vms_pb2_grpc.VehicleManagementStub(self._channel)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((self._host, self._port))
+
+        self._helo()
 
         self._event = threading.Event()
         self._signal_thread = threading.Thread(target=self._on_signal, args=())
@@ -83,32 +133,25 @@ class Adapter:
         """Returns the elapsed time in seconds since the last signal"""
         return time.time() - self.last_signal
 
-    def _commit(self, motion_request):
-        try:
-            return self._stub.MotionCommand(motion_request, timeout=1)
-        except grpc.RpcError as e:
-            match e.code():
-                case grpc.StatusCode.UNAVAILABLE:
-                    self.status = self.ConnectionState.DISCONNECTED
-                    logging.error("Unable to connect to remote machine: %s", self._host)
-                case grpc.StatusCode.CANCELLED:
-                    logging.debug("Signal motion command")
-                case _:
-                    logging.error("Error: %s", e.code())
+    def _helo(self):
+        proto_bytes = build_protocol(0x10, bytearray(b"Woei"))
+        self.socket.sendall(proto_bytes)
+
+    def _commit(self, motion):
+        proto_bytes = build_protocol(Motion.PROTOCOL_MESSAGE, motion.to_bytes())
+        self.socket.sendall(proto_bytes)
 
     def change(self, motion_list):
-        changes = map(
-            lambda a: vms_pb2.Motion.ChangeSet(actuator=a[0], value=a[1]), motion_list
-        )
-        self._commit(vms_pb2.Motion(type=vms_pb2.Motion.CHANGE, changes=changes))
+        """Changes motion"""
+        self._commit(Motion(Motion.MotionType.CHANGE, motion_list))
 
     def disable_motion(self):
         """Disables motion"""
-        self._commit(vms_pb2.Motion(type=vms_pb2.Motion.STOP_ALL))
+        self._commit(Motion(Motion.MotionType.STOP_ALL))
 
     def enable_motion(self):
         """Enables motion"""
-        self._commit(vms_pb2.Motion(type=vms_pb2.Motion.RESUME_ALL))
+        self._commit(Motion(Motion.MotionType.RESUME_ALL))
 
     def restart(self):
         """Restarts the machine"""
@@ -126,7 +169,7 @@ class Adapter:
         """Stops the machine"""
         logging.debug("Stopping machine")
         self._event.set()
-        self._channel.close()
+        self.socket.close()
         self._signal_thread.join()
 
     def idle(self):
