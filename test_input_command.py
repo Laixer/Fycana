@@ -17,7 +17,7 @@ logging.basicConfig(format="%(levelname)s %(message)s", level=logging.DEBUG)
 
 class TestInputCommand:
     """
-    Diagnose the machine
+    Test input command
     """
 
     def __init__(self, host, port):

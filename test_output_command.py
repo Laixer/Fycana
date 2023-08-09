@@ -16,10 +16,12 @@ config.read("config.ini")
 host = config["glonax"]["host"]
 port = config["glonax"]["port"]
 
+logging.basicConfig(format="%(levelname)s %(message)s", level=logging.INFO)
+
 
 class TestOutputCommand:
     """
-    Test the machine
+    Test output command
     """
 
     def __init__(self, host, port):
@@ -46,79 +48,79 @@ class TestOutputCommand:
         self.machine.enable_motion()
 
         while True:
-            print("Testing actuator: boom up")
+            logging.info("Testing actuator: boom up")
             self._reset()
             self.machine.change([(ExcavatorActuator.Boom, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing actuator: boom down")
+            logging.info("Testing actuator: boom down")
             self._reset()
             self.machine.change([(ExcavatorActuator.Boom, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing actuator: arm up")
+            logging.info("Testing actuator: arm up")
             self._reset()
             self.machine.change([(ExcavatorActuator.Arm, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing actuator: arm down")
+            logging.info("Testing actuator: arm down")
             self._reset()
             self.machine.change([(ExcavatorActuator.Arm, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing actuator: attachment up")
+            logging.info("Testing actuator: attachment up")
             self._reset()
             self.machine.change([(ExcavatorActuator.Attachment, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing actuator: attachment down")
+            logging.info("Testing actuator: attachment down")
             self._reset()
             self.machine.change([(ExcavatorActuator.Attachment, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing actuator: slew up")
+            logging.info("Testing actuator: slew up")
             self._reset()
             self.machine.change([(ExcavatorActuator.Slew, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing actuator: slew down")
+            logging.info("Testing actuator: slew down")
             self._reset()
             self.machine.change([(ExcavatorActuator.Slew, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing actuator: track left up")
+            logging.info("Testing actuator: track left up")
             self._reset()
             self.machine.change([(ExcavatorActuator.TrackLeft, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing actuator: track left down")
+            logging.info("Testing actuator: track left down")
             self._reset()
             self.machine.change([(ExcavatorActuator.TrackLeft, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing actuator: track right up")
+            logging.info("Testing actuator: track right up")
             self._reset()
             self.machine.change([(ExcavatorActuator.TrackRight, POWER_MAX)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing actuator: track right down")
+            logging.info("Testing actuator: track right down")
             self._reset()
             self.machine.change([(ExcavatorActuator.TrackRight, POWER_MIN)])
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing drive: drive straight up")
+            logging.info("Testing drive: drive straight up")
             self._reset()
             self.machine.change(
                 [
@@ -129,7 +131,7 @@ class TestOutputCommand:
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing drive: drive straight down")
+            logging.info("Testing drive: drive straight down")
             self._reset()
             self.machine.change(
                 [
@@ -140,7 +142,7 @@ class TestOutputCommand:
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing all: actuators up")
+            logging.info("Testing all: actuators up")
             self._reset()
             self.machine.change(
                 [
@@ -155,7 +157,7 @@ class TestOutputCommand:
 
             time.sleep(SLEEP_TIME)
 
-            print("Testing all: actuators down")
+            logging.info("Testing all: actuators down")
             self._reset()
             self.machine.change(
                 [
