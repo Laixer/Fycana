@@ -180,6 +180,10 @@ class Adapter:
         self.socket.close()
         self._signal_thread.join()
 
+    def is_terminated(self):
+        """Returns True if the machine is running"""
+        return self._event.is_set()
+
     def idle(self):
-        while self.status == self.ConnectionState.CONNECTED:
+        while not self.is_terminated():
             time.sleep(0.1)

@@ -63,6 +63,12 @@ class ExcavatorAdapter(Adapter):
         elif signal.function == 595:
             self.vms["cpu_15"] = signal.value
             logging.debug(f"Host CPU 3: {signal.value}%")
+        elif signal.function == 0x1A4:
+            self.vms["timestamp"] = signal.value
+            logging.debug(f"Host timestamp: {signal.value}")
+        elif signal.function == 0x1A5:
+            self.vms["uptime"] = signal.value
+            logging.debug(f"Host uptime: {signal.value}")
         else:
             logging.warn(f"Unknown host metric: {signal}")
         if self.signal_callback:
