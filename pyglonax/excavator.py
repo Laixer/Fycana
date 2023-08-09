@@ -113,10 +113,13 @@ class ExcavatorAdapter(Adapter):
     def _on_frame_signal(self, signal):
         if "frame" not in self.encoder:
             self.encoder["frame"] = {}
-        if signal.function == 0:
+        if signal.function == 0x0:
             self.encoder["frame"]["position"] = signal.value
             self.encoder["frame"]["angle"] = signal.value
             logging.debug(f"Frame position: {signal.value:.3f}")
+        elif signal.function == 0x1:
+            self.encoder["frame"]["speed"] = signal.value
+            logging.debug(f"Frame speed: {signal.value:.3f}")
         else:
             logging.warn(f"Unknown frame metric: {signal}")
         if self.signal_callback:
@@ -125,10 +128,13 @@ class ExcavatorAdapter(Adapter):
     def _on_boom_signal(self, signal):
         if "boom" not in self.encoder:
             self.encoder["boom"] = {}
-        if signal.function == 0:
+        if signal.function == 0x0:
             self.encoder["boom"]["position"] = signal.value
             self.encoder["boom"]["angle"] = signal.value - 1.047
             logging.debug(f"Boom position: {signal.value:.3f}")
+        elif signal.function == 0x1:
+            self.encoder["boom"]["speed"] = signal.value
+            logging.debug(f"Boom speed: {signal.value:.3f}")
         else:
             logging.warn(f"Unknown boom metric: {signal}")
         if self.signal_callback:
@@ -137,10 +143,13 @@ class ExcavatorAdapter(Adapter):
     def _on_arm_signal(self, signal):
         if "arm" not in self.encoder:
             self.encoder["arm"] = {}
-        if signal.function == 0:
+        if signal.function == 0x0:
             self.encoder["arm"]["position"] = signal.value
             self.encoder["arm"]["angle"] = signal.value
             logging.debug(f"Arm position: {signal.value:.3f}")
+        elif signal.function == 0x1:
+            self.encoder["arm"]["speed"] = signal.value
+            logging.debug(f"Arm speed: {signal.value:.3f}")
         else:
             logging.warn(f"Unknown arm metric: {signal}")
         if self.signal_callback:
@@ -149,10 +158,13 @@ class ExcavatorAdapter(Adapter):
     def _on_attachment_signal(self, signal):
         if "attachment" not in self.encoder:
             self.encoder["attachment"] = {}
-        if signal.function == 0:
+        if signal.function == 0x0:
             self.encoder["attachment"]["position"] = signal.value
             self.encoder["attachment"]["angle"] = signal.value - 0.962
             logging.debug(f"Attachment position: {signal.value:.3f}")
+        elif signal.function == 0x1:
+            self.encoder["attachment"]["speed"] = signal.value
+            logging.debug(f"Attachment speed: {signal.value:.3f}")
         else:
             logging.warn(f"Unknown attachment metric: {signal}")
         if self.signal_callback:
