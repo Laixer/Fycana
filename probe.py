@@ -7,7 +7,6 @@ import configparser
 
 from pyglonax.excavator import Excavator, ExcavatorAdapter
 
-HOST = "https://cymbion-oybqn.ondigitalocean.app"
 VERSION = 101
 
 config = configparser.ConfigParser()
@@ -15,6 +14,8 @@ config.read("config.ini")
 
 host = config["glonax"]["host"]
 port = config["glonax"]["port"]
+
+telemetry_host = config["telemetry"]["host"]
 
 robot = config["robot"]["definition_file"]
 
@@ -26,15 +27,16 @@ class ProbeCommand:
     Diagnose the machine
     """
 
-    def __init__(self, definition_file, host, port):
+    def __init__(self, definition_file, host, port, telemetry_host):
         self.excavator = Excavator.from_json(file_path=definition_file)
         self.machine = ExcavatorAdapter(host, port)
+        self.telemetry_host = telemetry_host
 
     def stop(self):
         self.machine.stop()
 
     def _probe(self, status):
-        url = f"{HOST}/api/v1/{self.excavator.instance}/probe"
+        url = f"{self.telemetry_host}/api/v1/{self.excavator.instance}/probe"
         data = {
             "version": VERSION,
             "status": status,
@@ -81,7 +83,7 @@ class ProbeCommand:
 
 
 if __name__ == "__main__":
-    program = ProbeCommand(robot, host, port)
+    program = ProbeCommand(robot, host, port, telemetry_host)
     try:
         program.start()
     except KeyboardInterrupt:
