@@ -5,18 +5,18 @@ import logging
 import requests
 import configparser
 
-from pyglonax.excavator import ExcavatorAdapter
+from pyglonax.excavator import Excavator, ExcavatorAdapter
 
 HOST = "https://cymbion-oybqn.ondigitalocean.app"
-INSTANCE = "7a538dec-4e9a-4d95-a642-97c5ebde1f39"
 VERSION = 101
-NAME = "test"
 
 config = configparser.ConfigParser()
 config.read("config.ini")
 
 host = config["glonax"]["host"]
 port = config["glonax"]["port"]
+
+robot = config["robot"]["definition_file"]
 
 logging.basicConfig(format="%(levelname)s %(message)s", level=logging.INFO)
 
@@ -26,18 +26,19 @@ class ProbeCommand:
     Diagnose the machine
     """
 
-    def __init__(self, host, port):
+    def __init__(self, definition_file, host, port):
+        self.excavator = Excavator.from_json(file_path=definition_file)
         self.machine = ExcavatorAdapter(host, port)
 
     def stop(self):
         self.machine.stop()
 
-    def _probe(self, instance, version, status, name):
-        url = f"{HOST}/api/v1/{instance}/probe"
+    def _probe(self, status):
+        url = f"{HOST}/api/v1/{self.excavator.instance}/probe"
         data = {
-            "version": version,
+            "version": VERSION,
             "status": status,
-            "name": name,
+            "name": self.excavator.name,
         }
 
         if "lat" in self.machine.gnss and "long" in self.machine.gnss:
@@ -73,16 +74,14 @@ class ProbeCommand:
             time.sleep(60)
 
             try:
-                self._probe(
-                    instance=INSTANCE, version=VERSION, status="HEALTHY", name=NAME
-                )
+                self._probe(status="HEALTHY")
                 logging.info("Probe sent successfully")
             except Exception as e:
                 logging.error(e)
 
 
 if __name__ == "__main__":
-    program = ProbeCommand(host, port)
+    program = ProbeCommand(robot, host, port)
     try:
         program.start()
     except KeyboardInterrupt:

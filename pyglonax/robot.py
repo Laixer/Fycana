@@ -244,7 +244,8 @@ class Device:
 
 
 class Robot:
-    def __init__(self, name, model=None):
+    def __init__(self, instance, name, model=None):
+        self.instance = instance
         self.name = name
         self.model = model
         self.joints = list()  # TODO: Replace with graph
@@ -262,9 +263,10 @@ class Robot:
         if definition_file["version"] != 1:
             raise ValueError("Invalid JSON definition file version")
 
+        instance = definition_file["instance"]
         name = definition_file["name"]
         model = definition_file["model"]
-        robot = cls(name, model)
+        robot = cls(instance, name, model)
         devices = definition_file["devices"]
         for device in devices:
             device_name = device["name"]
@@ -391,7 +393,7 @@ class Robot:
 
     # TODO: Clean up
     def __str__(self) -> str:
-        s = f"Robot={self.name}"
+        s = f"Robot={self.name}, Instance={self.instance}"
         for device in self.devices:
             s += f"\n  {device}"
         if self.model is not None:
