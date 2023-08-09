@@ -177,27 +177,35 @@ class VMSPanel:
         grid = Table.grid(expand=True)
 
         grid.add_column(ratio=1)
-        grid.add_column(justify="right", width=5)
-        grid.add_column(justify="right", width=5)
-        grid.add_column(justify="right", width=5)
+        grid.add_column(justify="right")
 
         if "cpu_1" in adapter.vms:
             grid.add_row(
                 "CPU",
-                format_percent(adapter.vms["cpu_1"]),
-                format_percent(adapter.vms["cpu_5"]),
-                format_percent(adapter.vms["cpu_15"]),
+                f"{format_percent(adapter.vms['cpu_1'])} / {format_percent(adapter.vms['cpu_5'])} / {format_percent(adapter.vms['cpu_15'])}",
             )
         else:
             grid.add_row("CPU")
         if "memory" in adapter.vms:
-            grid.add_row("Memory", "", "", format_percent(adapter.vms["memory"]))
+            grid.add_row("Memory", format_percent(adapter.vms["memory"]))
         else:
             grid.add_row("Memory")
         if "swap" in adapter.vms:
-            grid.add_row("Swap", "", "", format_percent(adapter.vms["swap"]))
+            grid.add_row("Swap", format_percent(adapter.vms["swap"]))
         else:
             grid.add_row("Swap")
+        if "uptime" in adapter.vms:
+            text = Text()
+            text.append(f"{round(adapter.vms['uptime'] / 60)}", "white")
+            text.append("min", style="bright_black")
+
+            grid.add_row("Uptime", text)
+        else:
+            grid.add_row("Uptime")
+        if "timestamp" in adapter.vms:
+            grid.add_row("Timestamp", f"{adapter.vms['timestamp']} UTC")
+        else:
+            grid.add_row("Timestamp")
 
         return Panel(grid, title="[magenta3][ VMS ]", style="on grey11")
 
@@ -373,10 +381,7 @@ with Live(layout, refresh_per_second=20) as live:
 
     try:
         while True:
-            if adapter.status == adapter.ConnectionState.DISCONNECTED:
-                adapter.restart()
-
             live.update(layout)
-            time.sleep(0.1)
+            adapter.idle()
     except KeyboardInterrupt:
         adapter.stop()
