@@ -1,9 +1,11 @@
 {
     "version": 1,
+    "instance": "36ebd674-21fa-4497-a712-eb2ee6b2cda1",
     "name": "gustav",
     "model": "volvo_ec240cl",
     "devices": [
       {"name": "0x0", "id": 0, "type": "engine"},
+      {"name": "0x9b", "id": 155, "type": "gnss"},
       {"name": "0x4a", "id": 74, "type": "hydo_ctrl"},
       {"name": "0x6a", "id": 106, "type": "rot_abs_mul_enc", "options": {"upper": 6.283} },
       {"name": "0x6b", "id": 107, "type": "rot_abs_snl_enc", "options": {"upper": 1.832} },
