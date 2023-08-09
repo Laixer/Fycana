@@ -1,6 +1,7 @@
 import logging
 import time
 import socket
+import struct
 import threading
 from enum import Enum
 
@@ -18,7 +19,7 @@ def build_protocol(message, bytes):
     buffer.append(message)
 
     length = len(bytes)
-    buffer += bytearray(length.to_bytes(2, byteorder="big", signed=True))
+    buffer += struct.pack(">H", length)
     buffer += bytes
 
     return buffer

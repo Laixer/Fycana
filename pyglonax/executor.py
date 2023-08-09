@@ -9,9 +9,11 @@ from pyglonax.util import format_angle_both, format_euler_tuple
 
 
 class ExcavatorExecutor:
-    def __init__(self, definition_file, host, supervisor=True, trace=False, **kwargs):
+    def __init__(
+        self, definition_file, host, port, supervisor=True, trace=False, **kwargs
+    ):
         self.excavator = Excavator.from_json(file_path=definition_file)
-        self.adapter = ExcavatorAdapter(host=host)
+        self.adapter = ExcavatorAdapter(host, port)
         self.supervisor = supervisor
         self.trace = trace
         self.adapter.on_signal_update(self._update_signal)
@@ -112,7 +114,7 @@ class ExcavatorExecutor:
                 elif joint.name == "attachment":
                     actuator = ExcavatorActuator.Attachment
 
-                motion_list.append((actuator, rel_power[idx]))
+                motion_list.append((actuator, int(rel_power[idx])))
 
             self.adapter.change(motion_list)
 

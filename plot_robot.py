@@ -9,7 +9,7 @@ import numpy as np
 from pyglonax.excavator import Excavator, ExcavatorAdapter
 
 
-# matplotlib.use("TkAgg")
+matplotlib.use("TkAgg")
 
 
 config = configparser.ConfigParser()
@@ -21,7 +21,7 @@ port = config["glonax"]["port"]
 
 excavator = Excavator.from_json(file_path=config["robot"]["definition_file"])
 
-adapter = ExcavatorAdapter(host=f"{host}:{port}")
+adapter = ExcavatorAdapter(host, port)
 
 articulation_chain = excavator.get_chain_by_name("articulation_arm")
 kinematic_chain = excavator.get_chain_by_name("kinematic_arm")

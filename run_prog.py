@@ -37,7 +37,8 @@ if __name__ == "__main__":
     kinematics = dict(config["kinematics"])
 
     executor = ExcavatorExecutor(
-        host=f"{host}:{port}",
+        host=host,
+        port=port,
         supervisor=args.no_supervisor,
         trace=args.trace,
         **robot,
