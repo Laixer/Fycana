@@ -142,6 +142,7 @@ class Adapter:
     def _shutdown(self):
         proto_bytes = build_protocol(0x11, bytearray())
         self.socket.sendall(proto_bytes)
+        self.socket.shutdown(socket.SHUT_RDWR)
 
     def change(self, motion_list):
         """Changes motion"""
@@ -178,8 +179,8 @@ class Adapter:
         logging.debug("Stopping machine")
         self._shutdown()
         self._event.set()
-        self.socket.close()
         self._signal_thread.join()
+        self.socket.close()
 
     def is_terminated(self):
         """Returns True if the machine is running"""
