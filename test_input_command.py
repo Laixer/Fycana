@@ -35,5 +35,6 @@ if __name__ == "__main__":
     program = TestInputCommand(host, port)
     try:
         program.start()
+        program.stop()
     except KeyboardInterrupt:
         program.stop()

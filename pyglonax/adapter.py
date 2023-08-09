@@ -53,47 +53,40 @@ class Adapter:
     def _on_signal(self):
         logging.debug("Listening for incoming signals")
 
+        HEADER_SIZE = 3 + 1 + 1 + 2
+
         while not self._event.is_set():
-            data = self.socket.recv(2048)
+            data = self.socket.recv(HEADER_SIZE)
             if not data:
                 break
 
-            # TODO: Read until buffer is empty
-            # TOOD: Move into transport layer {
-            header_offset = 0
-            for i in range(len(data) - 3):
-                if data[i] == 76:
-                    if data[i + 1] == 88:
-                        if data[i + 2] == 82:
-                            header_offset = i + 3
-                            break
+            if len(data) != HEADER_SIZE:
+                logging.debug("Invalid header size")
+                continue
 
-            version = data[header_offset]
+            if data[0] != 76 or data[1] != 88 or data[2] != 82:
+                logging.debug("Invalid header")
+                continue
+
+            version = data[3]
             if version != 0x1:
-                print("Invalid version", version)
+                logging.debug("Invalid version")
                 continue
-            header_offset += 1
 
-            message = data[header_offset]
+            message = data[4]
             if message != 0x31:  # 0x31 = Signal
-                print("Invalid message", message)
+                logging.debug("Invalid message")
                 continue
-            header_offset += 1
 
-            payload_length = int.from_bytes(
-                data[header_offset : header_offset + 2], byteorder="big", signed=False
-            )
+            payload_length = int.from_bytes(data[5:7], byteorder="big", signed=False)
             if payload_length > 4096:
-                print("Invalid payload length", payload_length)
+                logging.debug("Invalid payload length")
                 continue
-            header_offset += 2
 
-            if header_offset + payload_length > len(data):
-                print("Buffer not complete")
-                continue
-            # TOOD: Move into transport layer }
+            payload = self.socket.recv(payload_length)
+            if not payload:
+                break
 
-            payload = data[header_offset : header_offset + payload_length]
             signal = Signal.from_bytes(payload)
 
             self.last_signal = time.time()
