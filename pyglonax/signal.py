@@ -53,13 +53,14 @@ class Signal:
         elif self.metric == Signal.SignalType.COUNT:
             return f"0x{self.address:02X}:{self.function:02X} » Count: {self.value}"
 
-    def from_bytes(data: bytes):
+    @classmethod
+    def from_bytes(cls, data: bytes):
         address = struct.unpack_from(">i", data, offset=0)[0]
         function = struct.unpack_from(">i", data, offset=4)[0]
 
         metric = Signal.SignalType(data[8])
 
-        signal = Signal(address, function, metric)
+        signal = cls(address, function, metric)
 
         if metric == Signal.SignalType.TEMPERATURE:
             signal.value = struct.unpack_from(">f", data, offset=9)[0]

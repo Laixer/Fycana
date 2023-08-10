@@ -11,7 +11,7 @@ from .motion import Motion
 
 # TODO: Move to transport.py or protocol.py or something
 def build_protocol(message, bytes):
-    PROTOCOL_HEADER = [76, 88, 82]
+    PROTOCOL_HEADER = b"LXR"
     PROTOCOL_VERSION = 0x1
 
     buffer = bytearray(PROTOCOL_HEADER)
@@ -128,8 +128,8 @@ class Adapter:
         """Returns the elapsed time in seconds since the last signal"""
         return time.time() - self.last_signal
 
-    def _helo(self):
-        proto_bytes = build_protocol(0x10, bytearray(b"Woei"))
+    def _helo(self, session_name="fycana"):
+        proto_bytes = build_protocol(0x10, bytearray(session_name.encode("ascii")))
         self.socket.sendall(proto_bytes)
 
     def _shutdown(self):
