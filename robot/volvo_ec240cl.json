@@ -2,6 +2,7 @@
     "version": 1,
     "instance": "36ebd674-21fa-4497-a712-eb2ee6b2cda1",
     "name": "gustav",
+    "type": "excavator",
     "model": "volvo_ec240cl",
     "devices": [
       {"name": "0x0", "id": 0, "type": "engine"},
